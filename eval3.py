@@ -5,8 +5,8 @@ import json
 
 def aspect_eval(y_test, y_pred, num):
     """
-    y_test: grouth_true test, DataFrame
-    y_pred: grouth_true predict, DataFrame
+    y_test: grouth_true test
+    y_pred: grouth_true predict
     """
 
     aspect_report = classification_report(
