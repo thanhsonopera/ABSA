@@ -124,7 +124,7 @@ class Instructor:
                     i, totol_loss[i] / len_train_data))
                 if not self.config['isKaggle']:
                     self.writer.add_scalar(
-                        f'validate_loss_class_{i}', totol_loss[i] / len_train_data, epoch)
+                        f'training_loss_class_{i}', totol_loss[i] / len_train_data, epoch)
 
             totol_pred = np.array([totol_pred[i].detach().cpu().numpy()
                                    for i in range(self.num_classes)])
@@ -132,9 +132,10 @@ class Instructor:
             totol_pred = np.transpose(totol_pred, (1, 0))
             totol_pred = (totol_pred > 0.5).astype(int)
             totol_label = totol_label.cpu().numpy().astype(int)
-
-            aspect_eval(totol_label, totol_pred, epoch, type='train')
-            cus_confusion_matrix(totol_label, totol_pred, epoch, type='train')
+            if not self.config['isKaggle']:
+                aspect_eval(totol_label, totol_pred, epoch, type='train')
+                cus_confusion_matrix(
+                    totol_label, totol_pred, epoch, type='train')
 
             self.validate(epoch)
         if not self.config['isKaggle']:
@@ -185,7 +186,7 @@ class Instructor:
                 totol_loss[i] /= len_val_data
                 if not self.config['isKaggle']:
                     self.writer.add_scalar(
-                        f'training_loss_class_{i}', totol_loss[i], epoch)
+                        f'validation_loss_class_{i}', totol_loss[i], epoch)
 
             totol_pred = np.array([totol_pred[i].cpu().numpy()
                                    for i in range(self.num_classes)])
@@ -206,12 +207,12 @@ class Instructor:
                 best_loss = totol_loss
                 self.save_checkpoint(best_loss)
                 save_pred = True
+            if not self.config['isKaggle']:
+                aspect_eval(totol_label, totol_pred,
+                            epoch, save_pred, type='val')
 
-            aspect_eval(totol_label, totol_pred,
-                        epoch, save_pred, type='val')
-
-            cus_confusion_matrix(totol_label, totol_pred,
-                                 epoch, save_pred, type='val')
+                cus_confusion_matrix(totol_label, totol_pred,
+                                     epoch, save_pred, type='val')
             # print('Predict : ', totol_pred.shape, totol_label.shape)
             # print(totol_pred[0], totol_label[0])
 
