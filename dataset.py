@@ -53,9 +53,9 @@ class Data:
             self.dataTest = pd.read_csv(
                 'relabel/test_merge.csv')
         elif (type == 'Hotel'):
-            self.dataTrain = pd.read_csv(r'relabel\hotel\Hotel-train.csv')
-            self.dataVal = pd.read_csv(r'relabel\hotel\Hotel-dev.csv')
-            self.dataTest = pd.read_csv(r'relabel\hotel\Hotel-test.csv')
+            self.dataTrain = pd.read_csv('relabel/hotel/Hotel-train.csv')
+            self.dataVal = pd.read_csv('relabel/hotel/Hotel-dev.csv')
+            self.dataTest = pd.read_csv('relabel/hotel/Hotel-test.csv')
 
         # profile = ProfileReport(
         #     self.dataTrain, title="Profiling Report", explorative=True)

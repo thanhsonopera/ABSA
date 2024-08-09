@@ -44,7 +44,8 @@ class Instructor:
         self.model = BertClassifier(
             self.config).to(self.device)
 
-        self.writer = SummaryWriter('result/logs')
+        if not self.config['isKaggle']:
+            self.writer = SummaryWriter('result/logs')
 
     def train(self):
         train_loader, len_train_data = self.data.getBatchDataTrain()
@@ -121,9 +122,9 @@ class Instructor:
             for i in range(self.num_classes):
                 print('Losses Train {} : {}'.format(
                     i, totol_loss[i] / len_train_data))
-
-                self.writer.add_scalar(
-                    f'validate_loss_class_{i}', totol_loss[i] / len_train_data, epoch)
+                if not self.config['isKaggle']:
+                    self.writer.add_scalar(
+                        f'validate_loss_class_{i}', totol_loss[i] / len_train_data, epoch)
 
             totol_pred = np.array([totol_pred[i].detach().cpu().numpy()
                                    for i in range(self.num_classes)])
@@ -136,8 +137,8 @@ class Instructor:
             cus_confusion_matrix(totol_label, totol_pred, epoch, type='train')
 
             self.validate(epoch)
-
-        self.writer.close()
+        if not self.config['isKaggle']:
+            self.writer.close()
 
     def validate(self, epoch):
         val_loader, len_val_data = self.data.getBatchDataTest()
@@ -182,9 +183,9 @@ class Instructor:
                 print('Losses Validate {} : {}'.format(
                     i, totol_loss[i] / len_val_data))
                 totol_loss[i] /= len_val_data
-
-                self.writer.add_scalar(
-                    f'training_loss_class_{i}', totol_loss[i], epoch)
+                if not self.config['isKaggle']:
+                    self.writer.add_scalar(
+                        f'training_loss_class_{i}', totol_loss[i], epoch)
 
             totol_pred = np.array([totol_pred[i].cpu().numpy()
                                    for i in range(self.num_classes)])
