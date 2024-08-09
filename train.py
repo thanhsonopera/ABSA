@@ -3,6 +3,8 @@ from dataset import Data
 from transformers import AutoTokenizer
 import tqdm
 from model import BertClassifier, BertClassifierVer2
+from losses import AsymmetricLoss
+from torch.amp import autocast, GradScaler
 import torch
 import numpy as np
 from eval3 import aspect_eval, cus_confusion_matrix
@@ -44,10 +46,9 @@ class Instructor:
         self.model = BertClassifier(
             self.config).to(self.device)
 
+    def train(self):
         if not self.config['isKaggle']:
             self.writer = SummaryWriter('result/logs')
-
-    def train(self):
         train_loader, len_train_data = self.data.getBatchDataTrain()
 
         # self.optimizer = torch.optim.Adam(self.model.parameters(), lr=1e-4)
@@ -138,6 +139,7 @@ class Instructor:
                     totol_label, totol_pred, epoch, type='train')
 
             self.validate(epoch)
+
         if not self.config['isKaggle']:
             self.writer.close()
 
@@ -203,7 +205,7 @@ class Instructor:
                 print('Initial lr', param_group['initial_lr'])
                 print('AdamGrad', param_group['amsgrad'])
 
-            if (sum(totol_loss) < sum(best_loss)):
+            if ((sum(totol_loss) < sum(best_loss)) and (not self.config['isKaggle'])):
                 best_loss = totol_loss
                 self.save_checkpoint(best_loss)
                 save_pred = True
@@ -283,31 +285,39 @@ class InstructorVer2:
         self.data = Data(type=config['type'], tokenizer=tokenizer,
                          batch_size=self.batch_size, max_length=self.max_length)
 
-    def train(self):
-        train_loader, len_train_data = self.data.getBatchDataTrain()
-
         self.model = BertClassifierVer2(
             self.config).to(self.device)
 
-        # self.optimizer = torch.optim.Adam(self.model.parameters(), lr=1e-4)
+    def train(self):
+        if not self.config['isKaggle']:
+            self.writer = SummaryWriter('result/logs')
+        train_loader, len_train_data = self.data.getBatchDataTrain()
 
-        self.optimizer = torch.optim.AdamW(
-            self.model.parameters(), lr=1e-5, weight_decay=0.01)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=1e-5)
+
+        # self.optimizer = torch.optim.AdamW(
+        #     self.model.parameters(), lr=1e-5, weight_decay=0.01)
+
         # weight=torch.tensor(self.weights).to(self.device)
-        self.losses = torch.nn.BCEWithLogitsLoss()
+        # self.losses = torch.nn.BCEWithLogitsLoss()
 
-        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            self.optimizer,
-            T_max=int(len_train_data / self.batch_size *
-                      self.epochs * 0.3),
-            eta_min=1e-6
-        )
+        self.losses = AsymmetricLoss(
+            gamma_neg=4, gamma_pos=1, clip=0.05, disable_torch_grad_focal_loss=True)
 
+        # self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        #     self.optimizer,
+        #     T_max=int(len_train_data / self.batch_size *
+        #               self.epochs * 0.3),
+        #     eta_min=1e-6
+        # )
+        scaler = GradScaler('cuda')
         for epoch in range(self.epochs):
             self.model.train()
             print('Epoch : {} / {}'.format(epoch+1, self.epochs))
             # totol_loss = [0 for _ in range(self.num_classes)]
             totol_loss = 0
+            totol_pred = None
+            totol_label = None
             for data in tqdm.tqdm(train_loader):
 
                 y_train = data['labels'].to(
@@ -319,94 +329,139 @@ class InstructorVer2:
                 }
 
                 self.optimizer.zero_grad()
-
-                outputs = self.model(**X_train)
+                with autocast('cuda'):
+                    outputs = self.model(**X_train).float()
 
                 loss = self.losses(outputs, y_train)
 
                 totol_loss += loss.item() * self.batch_size
-                loss.backward()
 
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+                pred = torch.sigmoid(outputs)
+                if totol_pred is None:
+                    totol_pred = pred
+                    totol_label = y_train
+                else:
+                    totol_pred = torch.cat((totol_pred, pred))
+                    totol_label = torch.cat((totol_label, y_train))
 
-                self.optimizer.step()
+                scaler.scale(loss).backward()
+
+                # torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+                scaler.step(self.optimizer)
+                scaler.update()
+                # self.optimizer.step()
                 # self.scheduler.step()
 
             print('Len Train Data : ', len_train_data)
 
             print('Losses Train : {}'.format(
                 totol_loss / len_train_data))
+            if not self.config['isKaggle']:
+                self.writer.add_scalar(
+                    f'train_loss', totol_loss, epoch)
 
-            self.validate(epoch)
-
-    def validate(self, epoch):
-        val_loader, len_val_data = self.data.getBatchDataVal()
-        self.model.eval()
-        best_loss = self.load_checkpoint()
-        save_pred = False
-        with torch.no_grad():
-            # totol_loss = [0 for _ in range(self.num_classes)]
-            totol_loss = 0
-            totol_pred = None
-            totol_label = None
-            for data in tqdm.tqdm(val_loader):
-                y_val = data['labels'].to(
-                    device=self.device, dtype=torch.float)
-                X_val = {
-                    'input_ids': data['input_ids'].to(self.device),
-                    'token_type_ids': data['token_type_ids'].to(self.device),
-                    'attention_mask': data['attention_mask'].to(self.device)
-                }
-
-                outputs = self.model(**X_val)
-
-                loss = self.losses(outputs, y_val)
-
-                pred = torch.sigmoid(outputs)
-
-                if totol_pred is None:
-                    totol_pred = pred
-                    totol_label = y_val
-                else:
-                    totol_pred = torch.cat((totol_pred, pred))
-                    totol_label = torch.cat((totol_label, y_val))
-
-                totol_loss += loss.item() * self.batch_size
-
-            print('Len Val Data : ', len_val_data)
-
-            print('Losses Validate : {}'.format(
-                totol_loss / len_val_data))
-
-            totol_loss /= len_val_data
-
-            totol_pred = totol_pred.cpu().numpy()
+            totol_pred = totol_pred.detach().cpu().numpy()
 
             totol_pred = (totol_pred > 0.5).astype(int)
 
             totol_label = totol_label.cpu().numpy().astype(int)
 
-            # if (totol_loss[0] < best_loss[0]) and (totol_loss[3] < best_loss[3]):
-            #     best_loss = totol_loss
-            #     self.save_checkpoint(best_loss)
-            #     save_pred = True
+            aspect_eval(totol_label, totol_pred, epoch, type='train')
+            cus_confusion_matrix(totol_label, totol_pred, epoch, type='train')
 
-            print('Predict : ', totol_pred.shape, totol_label.shape)
-            print(totol_pred[0], totol_label[0])
-            aspect_eval(totol_label, totol_pred, 3 + epoch, save_pred)
+            self.validate(epoch)
 
-    def test(self, str):
-        self.data.getStrData(str)
+    def validate(self, epoch):
+        val_loader, len_val_data = self.data.getBatchDataTest()
+        self.model.eval()
+        best_loss = self.load_checkpoint()
+        save_pred = False
 
-    def load_checkpoint(self):
+        totol_loss = 0
+        totol_pred = None
+        totol_label = None
+        for data in tqdm.tqdm(val_loader):
+            y_val = data['labels'].to(
+                device=self.device, dtype=torch.float)
+            X_val = {
+                'input_ids': data['input_ids'].to(self.device),
+                'token_type_ids': data['token_type_ids'].to(self.device),
+                'attention_mask': data['attention_mask'].to(self.device)
+            }
+            with torch.no_grad():
+                with autocast('cuda'):
+                    outputs = self.model(**X_val)
+                    loss = self.losses(outputs, y_val)
+                    pred = torch.sigmoid(outputs)
+
+            if totol_pred is None:
+                totol_pred = pred
+                totol_label = y_val
+            else:
+                totol_pred = torch.cat((totol_pred, pred))
+                totol_label = torch.cat((totol_label, y_val))
+
+            totol_loss += loss.item() * self.batch_size
+
+        print('Len Val Data : ', len_val_data)
+
+        print('Losses Validate : {}'.format(
+            totol_loss / len_val_data))
+
+        totol_loss /= len_val_data
+
+        totol_pred = totol_pred.cpu().numpy()
+
+        totol_pred = (totol_pred > 0.5).astype(int)
+
+        totol_label = totol_label.cpu().numpy().astype(int)
+        if (totol_loss < best_loss[0]):
+            best_loss = [totol_loss]
+            self.save_checkpoint(best_loss)
+            save_pred = True
+
+        if not self.config['isKaggle']:
+            self.writer.add_scalar(
+                f'validation_loss', totol_loss, epoch)
+
+        aspect_eval(totol_label, totol_pred, epoch, save_pred)
+        cus_confusion_matrix(totol_label, totol_pred, epoch)
+
+    def prediction(self, str, type=False):
+        evalData, len_pred = self.data.getStrData(str)
+        if not type:
+            _ = self.load_checkpoint(isPred=True)
+        key = ['AMBIENCE', 'QUALITY', 'PRICES', 'LOCATION', 'SERVICE']
+        for data in evalData:
+            X = {
+                'input_ids': data['input_ids'].to(self.device),
+                'token_type_ids': data['token_type_ids'].to(self.device),
+                'attention_mask': data['attention_mask'].to(self.device)
+            }
+            self.model.eval()
+            with torch.no_grad():
+                outputs = self.model(**X)
+                pred = torch.sigmoid(outputs)
+                pred = pred.cpu().numpy()
+                pred = (pred > 0.5).astype(int)
+                print(pred)
+
+    def load_checkpoint(self, isPred=False):
         path_losses = 'checkpoint/losses.json'
-
+        checkpoint_path = 'checkpoint/model.pth'
         if not os.path.exists(path_losses):
-            return [999 for _ in range(self.num_classes)]
+            return [999]
 
         with open(path_losses, 'r') as f:
             losses = json.load(f)
 
+        if isPred:
+            if os.path.exists(checkpoint_path):
+                self.model.load_state_dict(torch.load(
+                    checkpoint_path, map_location=self.device))
+                print("Model checkpoint loaded successfully.")
+            else:
+                print("No model checkpoint found at 'checkpoint/model.pth'.")
         return losses
 
     def save_checkpoint(self, totol_loss):

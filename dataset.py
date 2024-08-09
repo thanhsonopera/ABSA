@@ -94,7 +94,7 @@ class Data:
             tokenizer=self.tokenizer,
             max_length=self.max_length
         )
-        return DataLoader(test_dataset, batch_size=self.batch_size * 2, shuffle=True), len(test_dataset)
+        return DataLoader(test_dataset, batch_size=self.batch_size, shuffle=True), len(test_dataset)
 
     def getStrData(self, str):
         str = preprocess_fn(str)

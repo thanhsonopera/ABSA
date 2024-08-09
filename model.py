@@ -64,6 +64,7 @@ class BertClassifierVer2(nn.Module):
 
         self.norm1 = nn.LayerNorm(3072).to(config['device'])
         self.fc1 = nn.Linear(3072, 256).to(config['device'])
+
         self.norm2 = nn.LayerNorm(256).to(config['device'])
         self.dropout2 = nn.Dropout(config['drop_rate'] * 1.5)
 
@@ -82,12 +83,14 @@ class BertClassifierVer2(nn.Module):
 
         pooled_output = pooled_output[:, 0, :]
 
-        pooled_output = self.norm1(pooled_output)
+        # pooled_output = self.norm1(pooled_output)
 
         pooled_output = self.dropout(pooled_output)
 
         pooled_output = self.fc1(pooled_output)
         pooled_output = self.norm2(pooled_output)
+
+        pooled_output = torch.nn.Tanh()(pooled_output)
 
         pooled_output = self.dropout(pooled_output)
 
