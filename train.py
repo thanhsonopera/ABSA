@@ -123,7 +123,7 @@ class Instructor:
                     i, totol_loss[i] / len_train_data))
 
                 self.writer.add_scalar(
-                    f'training_loss_class_{i}', totol_loss[i] / len_train_data, epoch)
+                    f'validate_loss_class_{i}', totol_loss[i] / len_train_data, epoch)
 
             totol_pred = np.array([totol_pred[i].detach().cpu().numpy()
                                    for i in range(self.num_classes)])
@@ -191,6 +191,15 @@ class Instructor:
             totol_pred = np.transpose(totol_pred, (1, 0))
             totol_pred = (totol_pred > 0.5).astype(int)
             totol_label = totol_label.cpu().numpy().astype(int)
+
+            print('Param optimizer : ')
+            for param_group in self.optimizer.param_groups:
+                print('Learning rate', param_group['lr'])
+                print('Beta', param_group['betas'])
+                print('Eps', param_group['eps'])
+                print('Weight decay', param_group['weight_decay'])
+                print('Initial lr', param_group['initial_lr'])
+                print('AdamGrad', param_group['amsgrad'])
 
             if (sum(totol_loss) < sum(best_loss)):
                 best_loss = totol_loss

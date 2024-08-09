@@ -47,11 +47,11 @@ class Data:
         self.max_length = max_length
         if (type == 'Restaurant'):
             self.dataTrain = pd.read_csv(
-                r'relabel\train_merge.csv')
+                'relabel/train_merge.csv')
             self.dataVal = pd.read_csv(
-                r'relabel\dev_merge.csv')
+                'relabel/dev_merge.csv')
             self.dataTest = pd.read_csv(
-                r'relabel\test_merge.csv')
+                'relabel/test_merge.csv')
         elif (type == 'Hotel'):
             self.dataTrain = pd.read_csv(r'relabel\hotel\Hotel-train.csv')
             self.dataVal = pd.read_csv(r'relabel\hotel\Hotel-dev.csv')
