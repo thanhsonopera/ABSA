@@ -34,7 +34,7 @@ if __name__ == '__main__':
                         help='Tên domain', choices=['restaurant', 'hotel'])
 
     parser.add_argument('--languague', '--lang', type=str,
-                        required=True, help='Ngôn ngữ', choices=['en', 'dutch'])
+                        required=True, help='Ngôn ngữ', choices=['en', 'dutch', 'fr'])
 
     parser.add_argument('--type', '--tp', type=str,
                         required=True, help='Train/Dev/Test', choices=['train', 'dev', 'test'])

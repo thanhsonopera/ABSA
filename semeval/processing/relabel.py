@@ -2,6 +2,7 @@ import yaml
 import argparse
 import pandas as pd
 import numpy as np
+import os
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -27,7 +28,7 @@ if __name__ == '__main__':
                         help='Tên domain', choices=['restaurant', 'hotel'])
 
     parser.add_argument('--languague', '--lang', type=str,
-                        required=True, help='Ngôn ngữ', choices=['en', 'dutch'])
+                        required=True, help='Ngôn ngữ', choices=['en', 'dutch', 'fr'])
 
     parser.add_argument('--type', '--tp', type=str,
                         required=True, help='Train/Dev/Test', choices=['train', 'dev', 'test'])
@@ -68,7 +69,8 @@ if __name__ == '__main__':
             last_df = result_df[(result_df[key[1:]] != 0).any(axis=1)]
             print('Last DF', last_df.info())
             print('==========================================================')
-
+            if not os.path.exists(pathLabel):
+                os.makedirs(os.path.dirname(pathLabel), exist_ok=True)
             last_df.to_csv(pathLabel, index=False)
         else:
             data = pd.read_csv(pathLabel)

@@ -1,4 +1,4 @@
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
 import torch
 import pandas as pd
 from preprocess import preprocess_fn
@@ -47,19 +47,15 @@ class Data:
         self.max_length = max_length
         if (type == 'Restaurant'):
             self.dataTrain = pd.read_csv(
-                'relabel/train_merge.csv')
+                'relabel/train_dev.csv')
             self.dataVal = pd.read_csv(
-                'relabel/dev_merge.csv')
+                'relabel/test_merge.csv')
             self.dataTest = pd.read_csv(
                 'relabel/test_merge.csv')
         elif (type == 'Hotel'):
             self.dataTrain = pd.read_csv('relabel/hotel/Hotel-train.csv')
             self.dataVal = pd.read_csv('relabel/hotel/Hotel-dev.csv')
             self.dataTest = pd.read_csv('relabel/hotel/Hotel-test.csv')
-
-        # profile = ProfileReport(
-        #     self.dataTrain, title="Profiling Report", explorative=True)
-        # profile.to_file("x_train_profiling.html")
 
         self.key = key
 
@@ -72,6 +68,13 @@ class Data:
             tokenizer=self.tokenizer,
             max_length=self.max_length
         )
+        # y_train_tensor = torch.tensor(
+        #     y_train.values, dtype=torch.int64)
+        # class_counts = y_train_tensor.sum(dim=0)
+        # self.class_weights = 1. / class_counts
+        # sampler = WeightedRandomSampler(
+        #     weights=self.class_weights, num_samples=len(train_dataset), replacement=True)
+
         return DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True), len(train_dataset)
 
     def getBatchDataVal(self):
@@ -83,6 +86,12 @@ class Data:
             tokenizer=self.tokenizer,
             max_length=self.max_length
         )
+        # y_val_tensor = torch.tensor(y_val.values, dtype=torch.int64)
+        # class_counts = y_val_tensor.sum(dim=0)
+        # class_weights = 1. / class_counts
+
+        # sampler = WeightedRandomSampler(
+        #     weights=self.class_weights, num_samples=len(val_dataset), replacement=True)
         return DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True), len(val_dataset)
 
     def getBatchDataTest(self):

@@ -134,9 +134,10 @@ class Instructor:
             totol_pred = (totol_pred > 0.5).astype(int)
             totol_label = totol_label.cpu().numpy().astype(int)
             if not self.config['isKaggle']:
-                aspect_eval(totol_label, totol_pred, epoch, type='train')
+                aspect_eval(totol_label, totol_pred, epoch,
+                            save_pred=False, type='train')
                 cus_confusion_matrix(
-                    totol_label, totol_pred, epoch, type='train')
+                    totol_label, totol_pred, epoch, save_pred=False, type='train')
 
             self.validate(epoch)
 
@@ -144,7 +145,7 @@ class Instructor:
             self.writer.close()
 
     def validate(self, epoch):
-        val_loader, len_val_data = self.data.getBatchDataTest()
+        val_loader, len_val_data = self.data.getBatchDataVal()
         self.model.eval()
         best_loss = self.load_checkpoint()
         print('Best Loss : ', best_loss)
@@ -302,7 +303,7 @@ class InstructorVer2:
         # self.losses = torch.nn.BCEWithLogitsLoss()
 
         self.losses = AsymmetricLoss(
-            gamma_neg=4, gamma_pos=1, clip=0.05, disable_torch_grad_focal_loss=True)
+            gamma_neg=1, gamma_pos=3, clip=-0.05, disable_torch_grad_focal_loss=True)
 
         # self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         #     self.optimizer,
@@ -366,13 +367,15 @@ class InstructorVer2:
 
             totol_label = totol_label.cpu().numpy().astype(int)
 
-            aspect_eval(totol_label, totol_pred, epoch, type='train')
-            cus_confusion_matrix(totol_label, totol_pred, epoch, type='train')
+            aspect_eval(totol_label, totol_pred, epoch,
+                        save_pred=False, type='train')
+            cus_confusion_matrix(totol_label, totol_pred,
+                                 epoch, save_pred=False, type='train')
 
             self.validate(epoch)
 
     def validate(self, epoch):
-        val_loader, len_val_data = self.data.getBatchDataTest()
+        val_loader, len_val_data = self.data.getBatchDataVal()
         self.model.eval()
         best_loss = self.load_checkpoint()
         save_pred = False
@@ -424,8 +427,9 @@ class InstructorVer2:
             self.writer.add_scalar(
                 f'validation_loss', totol_loss, epoch)
 
-        aspect_eval(totol_label, totol_pred, epoch, save_pred)
-        cus_confusion_matrix(totol_label, totol_pred, epoch)
+        aspect_eval(totol_label, totol_pred, epoch, save_pred, type='val')
+        cus_confusion_matrix(totol_label, totol_pred,
+                             epoch, save_pred, type='val')
 
     def prediction(self, str, type=False):
         evalData, len_pred = self.data.getStrData(str)

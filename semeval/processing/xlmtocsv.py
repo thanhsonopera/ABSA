@@ -51,7 +51,7 @@ if __name__ == '__main__':
                         help='Tên domain', choices=['restaurant', 'hotel'])
 
     parser.add_argument('--languague', '--lang', type=str,
-                        required=True, help='Ngôn ngữ', choices=['en', 'dutch'])
+                        required=True, help='Ngôn ngữ', choices=['en', 'dutch', 'fr'])
 
     parser.add_argument('--type', '--tp', type=str,
                         required=True, help='Train/Dev/Test', choices=['train', 'dev', 'test'])
@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
     all_review = traverse_tree(root)
 
-    with open(path_csv, 'w', newline='') as csvfile:
+    with open(path_csv, 'w', newline='', encoding='utf-8') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(
             ['text', 'target', 'category', 'polarity', 'from', 'to'])

@@ -9,3 +9,9 @@ restaurant:
     train_csv: "semeval/restaurant/dutch/restaurants_dutch_training.csv"
     train_csv_aspects: "semeval/restaurant/dutch/restaurants_dutch_training_aspects.csv"
     train_csv_aspects_relabel: "relabel/restaurant/dutch/Restaurant-train.csv"
+
+  fr:
+    train_xml: "semeval/restaurant/fr/ABSA16FR_Restaurants_Train-withcontent.xml"
+    train_csv: "semeval/restaurant/fr/ABSA16FR_Restaurants_Train-withcontent.csv"
+    train_csv_aspects: "semeval/restaurant/fr/ABSA16FR_Restaurants_Train-withcontent_aspects.csv"
+    train_csv_aspects_relabel: "relabel/restaurant/fr/Restaurant-train.csv"
