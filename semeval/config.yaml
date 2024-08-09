@@ -1,0 +1,11 @@
+restaurant:
+  en:
+    train_xml: "semeval/restaurant/en/ABSA16_Restaurants_Train_SB1_v2.xml"
+    train_csv: "semeval/restaurant/en/ABSA16_Restaurants_Train_SB1_v2.csv"
+    train_csv_aspects: "semeval/restaurant/en/ABSA16_Restaurants_Train_SB1_v2_aspects.csv"
+    train_csv_aspects_relabel: "relabel/restaurant/en/Restaurant-train.csv"
+  dutch:
+    train_xml: "semeval/restaurant/dutch/restaurants_dutch_training.xml"
+    train_csv: "semeval/restaurant/dutch/restaurants_dutch_training.csv"
+    train_csv_aspects: "semeval/restaurant/dutch/restaurants_dutch_training_aspects.csv"
+    train_csv_aspects_relabel: "relabel/restaurant/dutch/Restaurant-train.csv"

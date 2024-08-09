@@ -2,6 +2,7 @@ from torch.utils.data import Dataset, DataLoader
 import torch
 import pandas as pd
 from preprocess import preprocess_fn
+# from pandas_profiling import ProfileReport
 
 
 class TextDataset(Dataset):
@@ -46,15 +47,20 @@ class Data:
         self.max_length = max_length
         if (type == 'Restaurant'):
             self.dataTrain = pd.read_csv(
-                r'relabel\restaurant\Restaurant-train.csv')
+                r'relabel\train_merge.csv')
             self.dataVal = pd.read_csv(
-                r'relabel\restaurant\Restaurant-dev.csv')
+                r'relabel\dev_merge.csv')
             self.dataTest = pd.read_csv(
-                r'relabel\restaurant\Restaurant-test.csv')
+                r'relabel\test_merge.csv')
         elif (type == 'Hotel'):
             self.dataTrain = pd.read_csv(r'relabel\hotel\Hotel-train.csv')
             self.dataVal = pd.read_csv(r'relabel\hotel\Hotel-dev.csv')
             self.dataTest = pd.read_csv(r'relabel\hotel\Hotel-test.csv')
+
+        # profile = ProfileReport(
+        #     self.dataTrain, title="Profiling Report", explorative=True)
+        # profile.to_file("x_train_profiling.html")
+
         self.key = key
 
     def getBatchDataTrain(self):
@@ -88,7 +94,7 @@ class Data:
             tokenizer=self.tokenizer,
             max_length=self.max_length
         )
-        return DataLoader(test_dataset, batch_size=self.batch_size, shuffle=True), len(test_dataset)
+        return DataLoader(test_dataset, batch_size=self.batch_size * 2, shuffle=True), len(test_dataset)
 
     def getStrData(self, str):
         str = preprocess_fn(str)
