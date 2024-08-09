@@ -1,8 +1,9 @@
-pip install sentencepiece
-pip install accelerate
+### pip install sentencepiece
 
-python semeval/processing/xlmtocsv.py --dm str --lang str --tp str
-python semeval/processing/datatoaspect.py --dm str --lang str --tp str
-python semeval/processing/relabel.py --dm str --lang str --tp str --ck True
+### pip install accelerate
 
-tensorboard --logdir=result/logs
+### python semeval/processing/xlmtocsv.py --dm str --lang str --tp str
+
+### python semeval/processing/datatoaspect.py --dm str --lang str --tp str
+
+### python semeval/processing/relabel.py --dm str --lang str --tp str --ck True
