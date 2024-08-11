@@ -1,6 +1,7 @@
 import csv
 import xml.etree.ElementTree as ET
 import yaml
+import os
 import argparse
 
 
@@ -51,7 +52,7 @@ if __name__ == '__main__':
                         help='Tên domain', choices=['restaurant', 'hotel'])
 
     parser.add_argument('--languague', '--lang', type=str,
-                        required=True, help='Ngôn ngữ', choices=['en', 'dutch', 'fr'])
+                        required=True, help='Ngôn ngữ', choices=['en', 'dutch', 'fr', 'rus', 'spa', 'tur'])
 
     parser.add_argument('--type', '--tp', type=str,
                         required=True, help='Train/Dev/Test', choices=['train', 'dev', 'test'])
@@ -74,6 +75,8 @@ if __name__ == '__main__':
 
     all_review = traverse_tree(root)
 
+    if not os.path.exists(os.path.dirname(path_csv)):
+        os.makedirs(os.path.dirname(path_csv), exist_ok=True)
     with open(path_csv, 'w', newline='', encoding='utf-8') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(

@@ -1,8 +1,8 @@
 
 from dataset import Data
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, AdamW, get_linear_schedule_with_warmup
 import tqdm
-from model import BertClassifier, BertClassifierVer2
+from model import BertClassifier, BertClassifierVer2, BertClassifierVer3
 from losses import AsymmetricLoss
 from torch.amp import autocast, GradScaler
 import torch
@@ -12,6 +12,7 @@ import json
 import random
 import os
 from torch.utils.tensorboard import SummaryWriter
+from lion_pytorch import Lion
 
 
 def set_seed(seed):
@@ -294,7 +295,8 @@ class InstructorVer2:
             self.writer = SummaryWriter('result/logs')
         train_loader, len_train_data = self.data.getBatchDataTrain()
 
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=1e-5)
+        self.optimizer = torch.optim.Adam(
+            self.model.parameters(), lr=1e-5, weight_decay=0.01)
 
         # self.optimizer = torch.optim.AdamW(
         #     self.model.parameters(), lr=1e-5, weight_decay=0.01)
@@ -303,7 +305,7 @@ class InstructorVer2:
         # self.losses = torch.nn.BCEWithLogitsLoss()
 
         self.losses = AsymmetricLoss(
-            gamma_neg=1, gamma_pos=3, clip=-0.05, disable_torch_grad_focal_loss=True)
+            gamma_neg=4, gamma_pos=1, clip=0.05, disable_torch_grad_focal_loss=True)
 
         # self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         #     self.optimizer,
@@ -440,6 +442,210 @@ class InstructorVer2:
             X = {
                 'input_ids': data['input_ids'].to(self.device),
                 'token_type_ids': data['token_type_ids'].to(self.device),
+                'attention_mask': data['attention_mask'].to(self.device)
+            }
+            self.model.eval()
+            with torch.no_grad():
+                outputs = self.model(**X)
+                pred = torch.sigmoid(outputs)
+                pred = pred.cpu().numpy()
+                pred = (pred > 0.5).astype(int)
+                print(pred)
+
+    def load_checkpoint(self, isPred=False):
+        path_losses = 'checkpoint/losses.json'
+        checkpoint_path = 'checkpoint/model.pth'
+        if not os.path.exists(path_losses):
+            return [999]
+
+        with open(path_losses, 'r') as f:
+            losses = json.load(f)
+
+        if isPred:
+            if os.path.exists(checkpoint_path):
+                self.model.load_state_dict(torch.load(
+                    checkpoint_path, map_location=self.device))
+                print("Model checkpoint loaded successfully.")
+            else:
+                print("No model checkpoint found at 'checkpoint/model.pth'.")
+        return losses
+
+    def save_checkpoint(self, totol_loss):
+        torch.save(self.model.state_dict(), 'checkpoint/model.pth')
+
+        with open('checkpoint/losses.json', 'w') as f:
+            json.dump(totol_loss, f)
+
+
+class InstructorVer3:
+    def __init__(self, config):
+        self.name_model = config['name_model']
+        self.max_length = config['max_length']
+        self.drop_rate = config['drop_rate']
+        self.num_classes = config['num_classes']
+        self.batch_size = config['batch_size']
+        self.epochs = config['num_epochs']
+        self.device = config['device']
+        self.weights = config['weights']
+        self.config = config
+
+        tokenizer = AutoTokenizer.from_pretrained(self.name_model)
+
+        self.data = Data(type=config['type'], tokenizer=tokenizer,
+                         batch_size=self.batch_size, max_length=self.max_length)
+
+        self.model = BertClassifierVer3(
+            self.config).to(self.device)
+
+    def train(self):
+        if not self.config['isKaggle']:
+            self.writer = SummaryWriter('result/logs')
+
+        train_loader, len_train_data = self.data.getBatchDataTrain()
+        num_training_steps = int(len_train_data / self.batch_size *
+                                 self.epochs)
+        # self.optimizer = AdamW(self.model.parameters(),
+        #                        lr=1e-5, correct_bias=False)
+        self.optimizer = Lion(self.model.parameters(),
+                              lr=1e-5, betas=(0.95, 0.98))
+        # self.optimizer = Lion(self.model.parameters(),
+        #                       lr=1e-5)
+        self.scheduler = get_linear_schedule_with_warmup(self.optimizer, num_warmup_steps=10,
+                                                         num_training_steps=num_training_steps)
+        self.losses = torch.nn.BCEWithLogitsLoss()
+
+        for epoch in range(self.epochs):
+            self.model.train()
+            print('Epoch : {} / {}'.format(epoch+1, self.epochs))
+            totol_loss = 0
+            totol_pred = None
+            totol_label = None
+            batch_count = 0
+            for data in tqdm.tqdm(train_loader):
+
+                y_train = data['labels'].to(
+                    device=self.device, dtype=torch.float)
+                X_train = {
+                    'input_ids': data['input_ids'].to(self.device),
+                    'attention_mask': data['attention_mask'].to(self.device)
+                }
+
+                self.optimizer.zero_grad()
+
+                outputs = self.model(**X_train)
+
+                loss = self.losses(outputs, y_train)
+
+                totol_loss += loss.item() * self.batch_size
+
+                loss.backward()
+                batch_count += 1
+                if batch_count % 5 == 0:
+                    torch.nn.utils.clip_grad_norm_(
+                        self.model.parameters(), max_norm=1.0)
+
+                    self.optimizer.step()
+                    self.scheduler.step()
+
+                pred = torch.sigmoid(outputs)
+                if totol_pred is None:
+                    totol_pred = pred
+                    totol_label = y_train
+                else:
+                    totol_pred = torch.cat((totol_pred, pred))
+                    totol_label = torch.cat((totol_label, y_train))
+
+            print('Len Train Data : ', len_train_data)
+
+            print('Losses Train : {}'.format(
+                totol_loss / len_train_data))
+            if not self.config['isKaggle']:
+                self.writer.add_scalar(
+                    f'train_loss', totol_loss, epoch)
+
+            if batch_count % 5 != 0:
+                torch.nn.utils.clip_grad_norm_(
+                    self.model.parameters(), max_norm=1.0)
+                self.optimizer.step()
+                self.scheduler.step()
+
+            totol_pred = totol_pred.detach().cpu().numpy()
+
+            totol_pred = (totol_pred > 0.5).astype(int)
+
+            totol_label = totol_label.cpu().numpy().astype(int)
+
+            aspect_eval(totol_label, totol_pred, epoch,
+                        save_pred=False, type='train')
+            cus_confusion_matrix(totol_label, totol_pred,
+                                 epoch, save_pred=False, type='train')
+
+            self.validate(epoch)
+
+    def validate(self, epoch):
+        val_loader, len_val_data = self.data.getBatchDataVal()
+        self.model.eval()
+        best_loss = self.load_checkpoint()
+        save_pred = False
+
+        totol_loss = 0
+        totol_pred = None
+        totol_label = None
+
+        for data in tqdm.tqdm(val_loader):
+            y_val = data['labels'].to(
+                device=self.device, dtype=torch.float)
+            X_val = {
+                'input_ids': data['input_ids'].to(self.device),
+                'attention_mask': data['attention_mask'].to(self.device)
+            }
+            with torch.no_grad():
+                outputs = self.model(**X_val)
+                loss = self.losses(outputs, y_val)
+                pred = torch.sigmoid(outputs)
+
+            if totol_pred is None:
+                totol_pred = pred
+                totol_label = y_val
+            else:
+                totol_pred = torch.cat((totol_pred, pred))
+                totol_label = torch.cat((totol_label, y_val))
+
+            totol_loss += loss.item() * self.batch_size
+
+        print('Len Val Data : ', len_val_data)
+
+        print('Losses Validate : {}'.format(
+            totol_loss / len_val_data))
+
+        totol_loss /= len_val_data
+
+        totol_pred = totol_pred.cpu().numpy()
+
+        totol_pred = (totol_pred > 0.5).astype(int)
+
+        totol_label = totol_label.cpu().numpy().astype(int)
+        if (totol_loss < best_loss[0]):
+            best_loss = [totol_loss]
+            self.save_checkpoint(best_loss)
+            save_pred = True
+
+        if not self.config['isKaggle']:
+            self.writer.add_scalar(
+                f'validation_loss', totol_loss, epoch)
+
+        aspect_eval(totol_label, totol_pred, epoch, save_pred, type='val')
+        cus_confusion_matrix(totol_label, totol_pred,
+                             epoch, save_pred, type='val')
+
+    def prediction(self, str, type=False):
+        evalData, len_pred = self.data.getStrData(str)
+        if not type:
+            _ = self.load_checkpoint(isPred=True)
+        key = ['AMBIENCE', 'QUALITY', 'PRICES', 'LOCATION', 'SERVICE']
+        for data in evalData:
+            X = {
+                'input_ids': data['input_ids'].to(self.device),
                 'attention_mask': data['attention_mask'].to(self.device)
             }
             self.model.eval()

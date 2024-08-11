@@ -4,6 +4,7 @@ restaurant:
     train_csv: "semeval/restaurant/en/ABSA16_Restaurants_Train_SB1_v2.csv"
     train_csv_aspects: "semeval/restaurant/en/ABSA16_Restaurants_Train_SB1_v2_aspects.csv"
     train_csv_aspects_relabel: "relabel/restaurant/en/Restaurant-train.csv"
+
   dutch:
     train_xml: "semeval/restaurant/dutch/restaurants_dutch_training.xml"
     train_csv: "semeval/restaurant/dutch/restaurants_dutch_training.csv"
@@ -15,3 +16,21 @@ restaurant:
     train_csv: "semeval/restaurant/fr/ABSA16FR_Restaurants_Train-withcontent.csv"
     train_csv_aspects: "semeval/restaurant/fr/ABSA16FR_Restaurants_Train-withcontent_aspects.csv"
     train_csv_aspects_relabel: "relabel/restaurant/fr/Restaurant-train.csv"
+
+  rus:
+    train_xml: "semeval/restaurant/russian/se16_ru_rest_train.xml"
+    train_csv: "semeval/restaurant/russian/se16_ru_rest_train.csv"
+    train_csv_aspects: "semeval/restaurant/russian/se16_ru_rest_train_aspects.csv"
+    train_csv_aspects_relabel: "relabel/restaurant/russian/Restaurant-train.csv"
+
+  spa:
+    train_xml: "semeval/restaurant/spanish/SemEval-2016ABSA Restaurants-Spanish_Train_Subtask1.xml"
+    train_csv: "semeval/restaurant/spanish/SemEval-2016ABSA Restaurants-Spanish_Train_Subtask1.csv"
+    train_csv_aspects: "semeval/restaurant/spanish/SemEval-2016ABSA Restaurants-Spanish_Train_Subtask1_aspects.csv"
+    train_csv_aspects_relabel: "relabel/restaurant/spanish/Restaurant-train.csv"
+
+  tur:
+    train_xml: "semeval/restaurant/turkish/reviews.xml"
+    train_csv: "semeval/restaurant/turkish/reviews.csv"
+    train_csv_aspects: "semeval/restaurant/turkish/reviews_aspects.csv"
+    train_csv_aspects_relabel: "relabel/restaurant/turkish/Restaurant-train.csv"

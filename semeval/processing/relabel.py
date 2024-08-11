@@ -28,7 +28,7 @@ if __name__ == '__main__':
                         help='Tên domain', choices=['restaurant', 'hotel'])
 
     parser.add_argument('--languague', '--lang', type=str,
-                        required=True, help='Ngôn ngữ', choices=['en', 'dutch', 'fr'])
+                        required=True, help='Ngôn ngữ', choices=['en', 'dutch', 'fr', 'rus', 'spa', 'tur'])
 
     parser.add_argument('--type', '--tp', type=str,
                         required=True, help='Train/Dev/Test', choices=['train', 'dev', 'test'])
@@ -52,7 +52,7 @@ if __name__ == '__main__':
         path = config[domain][lang][typeAspect]
         pathLabel = config[domain][lang][typeLabel]
         if not check:
-            data = pd.read_csv(path)
+            data = pd.read_csv(path, encoding='utf-8')
 
             key = ['Review', 'AMBIENCE', 'QUALITY',
                    'PRICES', 'LOCATION', 'SERVICE']
@@ -69,11 +69,12 @@ if __name__ == '__main__':
             last_df = result_df[(result_df[key[1:]] != 0).any(axis=1)]
             print('Last DF', last_df.info())
             print('==========================================================')
-            if not os.path.exists(pathLabel):
+            if not os.path.exists(os.path.dirname(pathLabel)):
                 os.makedirs(os.path.dirname(pathLabel), exist_ok=True)
-            last_df.to_csv(pathLabel, index=False)
+
+            last_df.to_csv(pathLabel, index=False, encoding='utf-8')
         else:
-            data = pd.read_csv(pathLabel)
+            data = pd.read_csv(pathLabel, encoding='utf-8')
             filtered_df = data[data['LOCATION'] == 1]
             print('==========================================================')
             print('LOCATION : ', data['LOCATION'].sum())

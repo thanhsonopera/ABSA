@@ -26,14 +26,24 @@ class TextDataset(Dataset):
             truncation=True,
             return_tensors="pt",
         )
-        # token_type_ids
+        if 'token_type_ids' in encoding:
+            # token_type_ids
+            input_ids = encoding["input_ids"].squeeze()
+            attention_mask = encoding["attention_mask"].squeeze()
+            token_type_ids = encoding["token_type_ids"].squeeze()
+
+            return {
+                "input_ids": input_ids,
+                "token_type_ids": token_type_ids,
+                "attention_mask": attention_mask,
+                "labels": torch.tensor(label),
+            }
+
         input_ids = encoding["input_ids"].squeeze()
         attention_mask = encoding["attention_mask"].squeeze()
-        token_type_ids = encoding["token_type_ids"].squeeze()
 
         return {
             "input_ids": input_ids,
-            "token_type_ids": token_type_ids,
             "attention_mask": attention_mask,
             "labels": torch.tensor(label),
         }

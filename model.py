@@ -98,3 +98,35 @@ class BertClassifierVer2(nn.Module):
         outputs = self.fcs(pooled_output)
 
         return outputs
+
+
+class BertClassifierVer3(nn.Module):
+    def __init__(self, config):
+        super(BertClassifierVer3, self).__init__()
+        self.bert = AutoModel.from_pretrained(
+            config['name_model'])
+
+        # self.fc1 = nn.Linear(self.bert.config.hidden_size,
+        #                      64).to(config['device'])
+        self.norm = nn.LayerNorm(
+            self.bert.config.hidden_size).to(config['device'])
+        self.dropout = nn.Dropout(config['drop_rate'])
+
+        self.fcs = nn.Linear(self.bert.config.hidden_size,
+                             5).to(config['device'])
+
+    def forward(self, input_ids: Tensor, attention_mask: Tensor) -> Tensor:
+
+        _, pooled_output = self.bert(input_ids=input_ids,
+                                     attention_mask=attention_mask,
+                                     return_dict=False)
+        # pooled_output = self.norm(pooled_output)
+
+        # pooled_output = self.dropout(pooled_output)
+        # pooled_output = self.fc1(pooled_output)
+        # pooled_output = torch.nn.Tanh()(pooled_output)
+        pooled_output = self.dropout(pooled_output)
+
+        outputs = self.fcs(pooled_output)
+
+        return outputs

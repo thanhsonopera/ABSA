@@ -34,7 +34,7 @@ if __name__ == '__main__':
                         help='Tên domain', choices=['restaurant', 'hotel'])
 
     parser.add_argument('--languague', '--lang', type=str,
-                        required=True, help='Ngôn ngữ', choices=['en', 'dutch', 'fr'])
+                        required=True, help='Ngôn ngữ', choices=['en', 'dutch', 'fr', 'rus', 'spa', 'tur'])
 
     parser.add_argument('--type', '--tp', type=str,
                         required=True, help='Train/Dev/Test', choices=['train', 'dev', 'test'])
@@ -50,8 +50,10 @@ if __name__ == '__main__':
     typeAspect = typeCSV + '_aspects'
     if (domain == 'restaurant'):
         path = config[domain][lang][typeCSV]
-
-        data = pd.read_csv(path, encoding='ISO-8859-1')
+        if (lang in ['fr', 'rus', 'tur']):
+            data = pd.read_csv(path, encoding='utf-8')
+        else:
+            data = pd.read_csv(path, encoding='ISO-8859-1')
         label = ['AMBIENCE#GENERAL', 'DRINKS#PRICES', 'DRINKS#QUALITY', 'DRINKS#STYLE&OPTIONS', 'FOOD#PRICES', 'FOOD#QUALITY',
                  'FOOD#STYLE&OPTIONS', 'LOCATION#GENERAL', 'RESTAURANT#GENERAL', 'RESTAURANT#MISCELLANEOUS', 'RESTAURANT#PRICES', 'SERVICE#GENERAL']
 
@@ -99,4 +101,4 @@ if __name__ == '__main__':
         print('LastData:', lastData.info())
 
         lastData.to_csv(config[domain][lang]
-                        [typeAspect], index=False)
+                        [typeAspect], index=False, encoding='utf-8')

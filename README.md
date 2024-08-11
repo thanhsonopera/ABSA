@@ -7,3 +7,5 @@
 ### python semeval/processing/datatoaspect.py --dm str --lang str --tp str
 
 ### python semeval/processing/relabel.py --dm str --lang str --tp str --ck True
+
+### conda install -c conda-forge ydata-profiling
