@@ -504,13 +504,13 @@ class InstructorVer3:
         train_loader, len_train_data = self.data.getBatchDataTrain()
         num_training_steps = int(len_train_data / self.batch_size *
                                  self.epochs)
-        # self.optimizer = AdamW(self.model.parameters(),
-        #                        lr=1e-5, correct_bias=False)
-        self.optimizer = Lion(self.model.parameters(),
-                              lr=1e-5)
+        self.optimizer = AdamW(self.model.parameters(),
+                               lr=1e-5, correct_bias=False)
         # self.optimizer = Lion(self.model.parameters(),
         #                       lr=1e-5)
-        self.scheduler = get_linear_schedule_with_warmup(self.optimizer, num_warmup_steps=10,
+        # self.optimizer = Lion(self.model.parameters(),
+        #                       lr=1e-5)
+        self.scheduler = get_linear_schedule_with_warmup(self.optimizer, num_warmup_steps=30,
                                                          num_training_steps=num_training_steps)
         self.losses = torch.nn.BCEWithLogitsLoss()
 
