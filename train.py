@@ -507,7 +507,7 @@ class InstructorVer3:
         # self.optimizer = AdamW(self.model.parameters(),
         #                        lr=1e-5, correct_bias=False)
         self.optimizer = Lion(self.model.parameters(),
-                              lr=1e-5, betas=(0.95, 0.98))
+                              lr=1e-5)
         # self.optimizer = Lion(self.model.parameters(),
         #                       lr=1e-5)
         self.scheduler = get_linear_schedule_with_warmup(self.optimizer, num_warmup_steps=10,
@@ -540,7 +540,7 @@ class InstructorVer3:
 
                 loss.backward()
                 batch_count += 1
-                if batch_count % 5 == 0:
+                if batch_count % 1 == 0:
                     torch.nn.utils.clip_grad_norm_(
                         self.model.parameters(), max_norm=1.0)
 
@@ -563,7 +563,7 @@ class InstructorVer3:
                 self.writer.add_scalar(
                     f'train_loss', totol_loss, epoch)
 
-            if batch_count % 5 != 0:
+            if batch_count % 1 != 0:
                 torch.nn.utils.clip_grad_norm_(
                     self.model.parameters(), max_norm=1.0)
                 self.optimizer.step()
