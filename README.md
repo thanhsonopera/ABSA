@@ -1,11 +1,28 @@
-### pip install sentencepiece
+# ABSA
 
-### pip install accelerate
+hello world 
 
-### python semeval/processing/xlmtocsv.py --dm str --lang str --tp str
+## Prerequisites
 
-### python semeval/processing/datatoaspect.py --dm str --lang str --tp str
+- Python 3.11.5
+- Required packages:
+  - `ydata-profiling`
+  - `torch`
+  ```bash
+  pip install -r requirements.txt
+  ```
+## Usage
 
-### python semeval/processing/relabel.py --dm str --lang str --tp str --ck True
+### 1. Convert XML to CSV
 
-### conda install -c conda-forge ydata-profiling
+```bash
+python semeval/processing/xlmtocsv.py --dm <domain> --lang <language> --tp <task_type>
+```
+### 2. Convert CSV to Aspect
+```bash
+python python semeval/processing/datatoaspect.py --dm <domain> --lang <language> --tp <task_type>
+```
+### 3. Merge Aspect
+```bash
+python semeval/processing/relabel.py --dm <domain> --lang <language> --tp <task_type> [--ck True]
+```
