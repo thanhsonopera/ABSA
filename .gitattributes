@@ -1,1 +1,1 @@
-checkpoint/cp6/model.pth filter=lfs diff=lfs merge=lfs -text
+checkpoint/*/*.pth filter=lfs diff=lfs merge=lfs -text
