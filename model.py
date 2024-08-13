@@ -108,8 +108,8 @@ class BertClassifierVer3(nn.Module):
 
         # self.fc1 = nn.Linear(self.bert.config.hidden_size,
         #                      64).to(config['device'])
-        self.norm = nn.LayerNorm(
-            self.bert.config.hidden_size).to(config['device'])
+        # self.norm = nn.LayerNorm(
+        #     self.bert.config.hidden_size).to(config['device'])
         self.dropout = nn.Dropout(config['drop_rate'])
 
         self.fcs = nn.Linear(self.bert.config.hidden_size,

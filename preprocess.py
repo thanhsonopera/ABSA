@@ -7,7 +7,7 @@ import emoji
 
 # from vncorenlp import VnCoreNLP
 import underthesea
-from nltk import flatten
+# from nltk import flatten
 
 
 # Remove HTML code
