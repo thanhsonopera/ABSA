@@ -1,0 +1,11 @@
+name_model: "vinai/phobert-base"
+max_length: 256
+drop_rate: 0.2
+num_classes: 5
+batch_size: 16
+num_epochs: 10
+device: "cuda"
+seed: 32
+weights: []
+isKaggle: False
+key: ["AMBIENCE", "QUALITY", "PRICES", "LOCATION", "SERVICE"]

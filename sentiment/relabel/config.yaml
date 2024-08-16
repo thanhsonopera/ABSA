@@ -1,0 +1,23 @@
+restaurant:
+  vn:
+    train: datasets/vlsp2018_restaurant/1-VLSP2018-SA-Restaurant-train.csv
+    train_sentiment: sentiment/relabel/restaurant/vn/train_sentiment.csv
+    dev: datasets/vlsp2018_restaurant/2-VLSP2018-SA-Restaurant-dev.csv
+    dev_sentiment: sentiment/relabel/restaurant/vn/dev_sentiment.csv
+    test: datasets/vlsp2018_restaurant/3-VLSP2018-SA-Restaurant-test.csv
+    test_sentiment: sentiment/relabel/restaurant/vn/test_sentiment.csv
+hotel:
+  vn:
+    train: datasets/vlsp2018_hotel/1-VLSP2018-SA-Hotel-train.csv
+    train_sentiment: sentiment/relabel/hotel/vn/train_sentiment.csv
+    dev: datasets/vlsp2018_hotel/2-VLSP2018-SA-Hotel-dev.csv
+    dev_sentiment: sentiment/relabel/hotel/vn/dev_sentiment.csv
+    test: datasets/vlsp2018_hotel/3-VLSP2018-SA-Hotel-test.csv
+    test_sentiment: sentiment/relabel/hotel/vn/test_sentiment.csv
+all:
+  vn:
+    train_sentiment: sentiment/relabel/all/vn/train_sentiment.csv
+    dev_sentiment: sentiment/relabel/all/vn/dev_sentiment.csv
+    test_sentiment: sentiment/relabel/all/vn/test_sentiment.csv
+    traindev_sentiment: sentiment/relabel/all/vn/traindev_sentiment.csv
+    traintest_sentiment: sentiment/relabel/all/vn/traintest_sentiment.csv

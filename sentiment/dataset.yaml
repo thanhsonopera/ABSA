@@ -1,0 +1,6 @@
+train: relabel/restaurant/vn/train_sentiment.csv
+val: relabel/restaurant/vn/dev_sentiment.csv
+test: relabel/restaurant/vn/test_sentiment.csv
+batch_size: 16
+max_length: 256
+key: ["Review", "AMBIENCE", "QUALITY", "PRICES", "LOCATION", "SERVICE"]
