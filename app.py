@@ -20,11 +20,11 @@ def load_model():
         'name_model': 'uitnlp/visobert',
         'num_classes': 5,
         'drop_rate': 0.5,
-        'device': 'cuda'
+        'device': 'cpu'
     }
     model = BertClassifierVer3(config).to(config['device'])
     model.load_state_dict(torch.load(
-        'checkpoint/cp6/model.pth', weights_only=False))
+        'checkpoint/cp6/model.pth', weights_only=False, map_location=torch.device(config['device'])))
     tokenizer = AutoTokenizer.from_pretrained(config['name_model'])
     model.eval()
     key = ['AMBIENCE', 'QUALITY', 'PRICES', 'LOCATION', 'SERVICE']

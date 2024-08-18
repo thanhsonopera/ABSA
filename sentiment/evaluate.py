@@ -13,7 +13,7 @@ class PolarityMapping:
 
 
 class Evaluator:
-    def __init__(self, y_test, y_pred, aspect_category_names, save_pred=False, num=0, type='val'):
+    def __init__(self, y_test, y_pred, aspect_category_names, num=0, type='val'):
         aspect_cate_test, aspect_cate_pred = [], []
         aspect_cate_polar_test, aspect_cate_polar_pred = [], []
 
@@ -27,9 +27,27 @@ class Evaluator:
                     aspect_category_names[index] + f',{PolarityMapping.INDEX_TO_POLARITY[col_test]}')
                 aspect_cate_polar_pred.append(
                     aspect_category_names[index] + f',{PolarityMapping.INDEX_TO_POLARITY[col_pred]}')
+        static_polor_test = {}
+        for i in aspect_cate_polar_test:
+            if i not in static_polor_test:
+                static_polor_test[i] = 1
+            else:
+                static_polor_test[i] += 1
+
+        static_polar_pred = {}
+        for i in aspect_cate_polar_pred:
+            if i not in static_polar_pred:
+                static_polar_pred[i] = 1
+            else:
+                static_polar_pred[i] += 1
 
         self.aspect_cate_polar_report = classification_report(
             aspect_cate_polar_test, aspect_cate_polar_pred, output_dict=True, zero_division=1)
+
+        static_polor_test = dict(sorted(static_polor_test.items()))
+        static_polar_pred = dict(sorted(static_polar_pred.items()))
+        self.aspect_cate_polar_report['static_polor_test'] = static_polor_test
+        self.aspect_cate_polar_report['static_polar_pred'] = static_polar_pred
 
         self.aspect_cate_report = classification_report(
             aspect_cate_test, aspect_cate_pred, output_dict=True, zero_division=1)
@@ -37,7 +55,7 @@ class Evaluator:
         self.polarity_report = classification_report(y_test.flatten(), y_pred.flatten(
         ), target_names=PolarityMapping.POLARITY_TO_INDEX, output_dict=True)
 
-        print(len(aspect_cate_polar_test), len(aspect_cate_polar_pred))
+        # print(len(aspect_cate_polar_test), len(aspect_cate_polar_pred)) => len * num_classes
 
         path_as_polarity = 'result/{}/aspect_cate_polar_report_{}.json'.format(
             type, num)
@@ -48,11 +66,7 @@ class Evaluator:
         with open(path_as_polarity, 'w') as f:
             json.dump(self.aspect_cate_polar_report, f)
 
-        if save_pred:
-            with open('checkpoint/aspect_cate_polar_report.json', 'w') as f:
-                json.dump(self.aspect_cate_polar_report, f)
-
-        self._merge_all_reports()
+        # self._merge_all_reports()
         self._build_macro_avg_df()
 
     def report(self, report_type='all'):
@@ -97,4 +111,5 @@ class Evaluator:
         } for report in [self.aspect_cate_polar_report, self.aspect_cate_report, self.polarity_report]])
         self.macro_avg_df.index = [
             'Aspect#Category,Polarity', 'Aspect#Category', 'Polarity']
+
         print(self.macro_avg_df)

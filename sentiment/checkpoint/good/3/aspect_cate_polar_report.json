@@ -1,0 +1,179 @@
+{
+    "AMBIENCE,None": {
+        "precision": 0.978116079923882,
+        "recall": 0.9625468164794008,
+        "f1-score": 0.9702689948088721,
+        "support": 1068.0
+    },
+    "AMBIENCE,negative": {
+        "precision": 0.7575757575757576,
+        "recall": 0.7575757575757576,
+        "f1-score": 0.7575757575757576,
+        "support": 33.0
+    },
+    "AMBIENCE,neutral": {
+        "precision": 0.32142857142857145,
+        "recall": 0.391304347826087,
+        "f1-score": 0.35294117647058826,
+        "support": 23.0
+    },
+    "AMBIENCE,positive": {
+        "precision": 0.7763975155279503,
+        "recall": 0.8389261744966443,
+        "f1-score": 0.8064516129032258,
+        "support": 149.0
+    },
+    "LOCATION,None": {
+        "precision": 0.980126467931346,
+        "recall": 0.9525899912203687,
+        "f1-score": 0.9661620658949243,
+        "support": 1139.0
+    },
+    "LOCATION,negative": {
+        "precision": 0.35294117647058826,
+        "recall": 0.8571428571428571,
+        "f1-score": 0.5,
+        "support": 7.0
+    },
+    "LOCATION,neutral": {
+        "precision": 0.6371681415929203,
+        "recall": 0.6990291262135923,
+        "f1-score": 0.6666666666666666,
+        "support": 103.0
+    },
+    "LOCATION,positive": {
+        "precision": 0.3333333333333333,
+        "recall": 0.5,
+        "f1-score": 0.4,
+        "support": 24.0
+    },
+    "PRICES,None": {
+        "precision": 0.9761431411530815,
+        "recall": 0.9722772277227723,
+        "f1-score": 0.9742063492063492,
+        "support": 505.0
+    },
+    "PRICES,negative": {
+        "precision": 0.6440677966101694,
+        "recall": 0.76,
+        "f1-score": 0.6972477064220184,
+        "support": 50.0
+    },
+    "PRICES,neutral": {
+        "precision": 0.8006535947712419,
+        "recall": 0.7852564102564102,
+        "f1-score": 0.7928802588996764,
+        "support": 312.0
+    },
+    "PRICES,positive": {
+        "precision": 0.8716049382716049,
+        "recall": 0.8694581280788177,
+        "f1-score": 0.8705302096177558,
+        "support": 406.0
+    },
+    "QUALITY,None": {
+        "precision": 0.7704918032786885,
+        "recall": 0.4563106796116505,
+        "f1-score": 0.573170731707317,
+        "support": 103.0
+    },
+    "QUALITY,negative": {
+        "precision": 0.65,
+        "recall": 0.4642857142857143,
+        "f1-score": 0.5416666666666666,
+        "support": 28.0
+    },
+    "QUALITY,neutral": {
+        "precision": 0.5727272727272728,
+        "recall": 0.6363636363636364,
+        "f1-score": 0.6028708133971292,
+        "support": 99.0
+    },
+    "QUALITY,positive": {
+        "precision": 0.9214417744916821,
+        "recall": 0.9558964525407478,
+        "f1-score": 0.9383529411764706,
+        "support": 1043.0
+    },
+    "SERVICE,None": {
+        "precision": 0.9856046065259118,
+        "recall": 0.9827751196172249,
+        "f1-score": 0.9841878294202204,
+        "support": 1045.0
+    },
+    "SERVICE,negative": {
+        "precision": 0.6470588235294118,
+        "recall": 0.7586206896551724,
+        "f1-score": 0.6984126984126984,
+        "support": 29.0
+    },
+    "SERVICE,neutral": {
+        "precision": 0.2857142857142857,
+        "recall": 0.13333333333333333,
+        "f1-score": 0.18181818181818182,
+        "support": 15.0
+    },
+    "SERVICE,positive": {
+        "precision": 0.9,
+        "recall": 0.9293478260869565,
+        "f1-score": 0.9144385026737968,
+        "support": 184.0
+    },
+    "accuracy": 0.9161036920659859,
+    "macro avg": {
+        "precision": 0.708129754042885,
+        "recall": 0.7331520144253572,
+        "f1-score": 0.7094924581869158,
+        "support": 6365.0
+    },
+    "weighted avg": {
+        "precision": 0.9187635313822914,
+        "recall": 0.9161036920659859,
+        "f1-score": 0.9162145747892105,
+        "support": 6365.0
+    },
+    "static_polor_test": {
+        "AMBIENCE,None": 1068,
+        "AMBIENCE,negative": 33,
+        "AMBIENCE,neutral": 23,
+        "AMBIENCE,positive": 149,
+        "LOCATION,None": 1139,
+        "LOCATION,negative": 7,
+        "LOCATION,neutral": 103,
+        "LOCATION,positive": 24,
+        "PRICES,None": 505,
+        "PRICES,negative": 50,
+        "PRICES,neutral": 312,
+        "PRICES,positive": 406,
+        "QUALITY,None": 103,
+        "QUALITY,negative": 28,
+        "QUALITY,neutral": 99,
+        "QUALITY,positive": 1043,
+        "SERVICE,None": 1045,
+        "SERVICE,negative": 29,
+        "SERVICE,neutral": 15,
+        "SERVICE,positive": 184
+    },
+    "static_polar_pred": {
+        "AMBIENCE,None": 1051,
+        "AMBIENCE,negative": 33,
+        "AMBIENCE,neutral": 28,
+        "AMBIENCE,positive": 161,
+        "LOCATION,None": 1107,
+        "LOCATION,negative": 17,
+        "LOCATION,neutral": 113,
+        "LOCATION,positive": 36,
+        "PRICES,None": 503,
+        "PRICES,negative": 59,
+        "PRICES,neutral": 306,
+        "PRICES,positive": 405,
+        "QUALITY,None": 61,
+        "QUALITY,negative": 20,
+        "QUALITY,neutral": 110,
+        "QUALITY,positive": 1082,
+        "SERVICE,None": 1042,
+        "SERVICE,negative": 34,
+        "SERVICE,neutral": 7,
+        "SERVICE,positive": 190
+    }
+}

@@ -3,23 +3,23 @@ max_length: 256
 
 num_classes: 5
 batch_size: 16
-epochs: 30 # 20
+epochs: 35 # 20
 
 device: "cuda"
 seed: 32
 isKaggle: False
 key: ["AMBIENCE", "QUALITY", "PRICES", "LOCATION", "SERVICE"]
 
-losses: 1 # 1: BCE, 2: CrossEntropy
-drop_rate: [0.2] # model 1: [0.2] # model 2: [0.2, 0.3]
-optimizer: "AdamW" # model 1: "Adam" # model 2: "AdamW"
+losses: 2 # 1: BCE, 2: CrossEntropy
+drop_rate: [0.2, 0.3] # model 1: [0.2] # model 2: [0.2, 0.3]
+optimizer: "Adam" # model 1: "Adam" # model 2: "AdamW"
 lr: 1e-5 # model 1: 1e-4 # model 2: 1e-5
-model: 3 # 1: 3072 -> 4 || 2: 3072 -> 256 -> 4 + LayerNorm ||
+model: 2 # 1: 3072 -> 4 # 2: 3072 -> 256 -> 4 LayerNorm
 
 clip_grad_norm: True
-scheduler: False
+scheduler: True
 weights: []
 T_max: 1356
-eta_min: 5e-5
+eta_min: 3e-5
 
-layer_norm: False
+layer_norm: True
