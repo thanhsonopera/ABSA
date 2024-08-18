@@ -508,8 +508,6 @@ class InstructorVer3:
                                lr=1e-5, correct_bias=False)
         # self.optimizer = Lion(self.model.parameters(),
         #                       lr=1e-5)
-        # self.optimizer = Lion(self.model.parameters(),
-        #                       lr=1e-5)
         self.scheduler = get_linear_schedule_with_warmup(self.optimizer, num_warmup_steps=30,
                                                          num_training_steps=num_training_steps)
         self.losses = torch.nn.BCEWithLogitsLoss()

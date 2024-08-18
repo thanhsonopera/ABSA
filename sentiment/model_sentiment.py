@@ -9,22 +9,27 @@ class SentimentClassifier(nn.Module):
         super(SentimentClassifier, self).__init__()
 
         self.config = config
-
-        self.bert = AutoModel.from_pretrained(
-            config['name_model'], output_hidden_states=True)
+        if config['model'] == 3:
+            self.bert = AutoModel.from_pretrained(
+                config['name_model'])
+            input_size_1 = 768
+        else:
+            self.bert = AutoModel.from_pretrained(
+                config['name_model'], output_hidden_states=True)
+            input_size_1 = 3072
 
         self.dropout = nn.Dropout(config['drop_rate'][0])
 
         if config['model'] == 2:
-            self.layer_norm = nn.LayerNorm(3072).to(config['device'])
-            self.fc = nn.Linear(3072, 256).to(config['device'])
+            self.layer_norm = nn.LayerNorm(input_size_1).to(config['device'])
+            self.fc = nn.Linear(input_size_1, 256).to(config['device'])
             self.layer_norm2 = nn.LayerNorm(256).to(config['device'])
             self.dropout2 = nn.Dropout(config['drop_rate'][1])
             self.fcs = [nn.Linear(256, 4).to(config['device'])
                         for _ in range(config['num_classes'])]
 
-        elif config['model'] == 1:
-            self.fcs = [nn.Linear(3072, 4).to(config['device'])
+        elif (config['model'] == 1) or (config['model'] == 3):
+            self.fcs = [nn.Linear(input_size_1, 4).to(config['device'])
                         for _ in range(config['num_classes'])]
 
     def forward(self, input_ids: Tensor, token_type_ids: Tensor, attention_mask: Tensor) -> Tensor:

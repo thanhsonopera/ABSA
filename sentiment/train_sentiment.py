@@ -52,7 +52,7 @@ class Instructor:
                 self.model.parameters(), lr=self.config['lr'])
         else:
             self.optimizer = AdamW(
-                self.model.parameters(), lr=self.config['lr'])
+                self.model.parameters(), lr=self.config['lr'], correct_bias=False)
 
         if (self.config['losses'] == 1):
             self.losses = [torch.nn.BCELoss()
