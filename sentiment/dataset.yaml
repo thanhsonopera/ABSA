@@ -1,6 +1,6 @@
-train: relabel/hotel/vn/train_sentiment.csv
-val: relabel/hotel/vn/dev_sentiment.csv
-test: relabel/hotel/vn/test_sentiment.csv
+train: relabel/all/vn/train_sentiment.csv
+val: relabel/all/vn/dev_sentiment.csv
+test: relabel/all/vn/test_sentiment.csv
 batch_size: 16
 max_length: 256
 key: ["Review", "AMBIENCE", "QUALITY", "PRICES", "LOCATION", "SERVICE"]

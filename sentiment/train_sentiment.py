@@ -51,8 +51,10 @@ class Instructor:
             self.optimizer = torch.optim.Adam(
                 self.model.parameters(), lr=self.config['lr'])
         else:
-            self.optimizer = AdamW(
-                self.model.parameters(), lr=self.config['lr'], correct_bias=False)
+            # self.optimizer = AdamW(
+            #     self.model.parameters(), lr=self.config['lr'], correct_bias=False)
+            self.optimizer = Lion(
+                self.model.parameters(), lr=self.config['lr'])
 
         if (self.config['losses'] == 1):
             self.losses = [torch.nn.BCELoss()
@@ -60,12 +62,17 @@ class Instructor:
         else:
             self.losses = [torch.nn.CrossEntropyLoss()
                            for _ in range(self.config['num_classes'])]
-
-        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            self.optimizer,
-            T_max=self.config['T_max'],  # ~ 2896 / 16 * 25 * 30%
-            eta_min=self.config['eta_min']
-        )
+        num_training_steps = int(len_train_data / self.config['batch_size'] *
+                                 self.config['epochs'])
+        if self.config['model'] == 3:
+            self.scheduler = get_linear_schedule_with_warmup(self.optimizer, num_warmup_steps=100,
+                                                             num_training_steps=num_training_steps)
+        else:
+            self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                self.optimizer,
+                T_max=self.config['T_max'],  # ~ 2896 / 16 * 25 * 30%
+                eta_min=self.config['eta_min']
+            )
 
         for epoch in range(self.config['epochs']):
             self.model.train()
@@ -235,7 +242,7 @@ class Instructor:
             for param_group in self.optimizer.param_groups:
                 print('Learning rate', param_group['lr'])
                 print('Beta', param_group['betas'])
-                print('Eps', param_group['eps'])
+                # print('Eps', param_group['eps'])
                 print('Weight decay', param_group['weight_decay'])
 
             # if ((sum(totol_loss) < sum(best_loss)) and (not self.config['isKaggle'])):
