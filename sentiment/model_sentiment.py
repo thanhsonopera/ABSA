@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from transformers import AutoModel
 from torch import Tensor
+from WKPooling import WKPooling
 
 
 class SentimentClassifier(nn.Module):
@@ -13,14 +14,22 @@ class SentimentClassifier(nn.Module):
             self.bert = AutoModel.from_pretrained(
                 config['name_model'])
             input_size_1 = 768
-        else:
+
+        elif (config['model'] == 2) or (config['model'] == 1):
             self.bert = AutoModel.from_pretrained(
                 config['name_model'], output_hidden_states=True)
-            input_size_1 = 3072
+            input_size_1 = 768
+
+        elif (config['model'] == 4):
+            self.bert = AutoModel.from_pretrained(
+                config['name_model'], output_hidden_states=True)
+            input_size_1 = 1024
 
         self.dropout = nn.Dropout(config['drop_rate'][0])
 
-        if config['model'] == 2:
+        self.wk = WKPooling(layer_start=9)
+
+        if (config['model'] == 2) or (self.config['model'] == 3):
             self.layer_norm = nn.LayerNorm(input_size_1).to(config['device'])
             self.fc = nn.Linear(input_size_1, 256).to(config['device'])
             self.layer_norm2 = nn.LayerNorm(256).to(config['device'])
@@ -28,7 +37,7 @@ class SentimentClassifier(nn.Module):
             self.fcs = [nn.Linear(256, 4).to(config['device'])
                         for _ in range(config['num_classes'])]
 
-        elif (config['model'] == 1) or (config['model'] == 3):
+        elif (config['model'] == 1) or (config['model'] == 4):
             self.fcs = [nn.Linear(input_size_1, 4).to(config['device'])
                         for _ in range(config['num_classes'])]
 
@@ -37,19 +46,32 @@ class SentimentClassifier(nn.Module):
             _, pooled_output = self.bert(input_ids=input_ids,
                                          attention_mask=attention_mask, return_dict=False)
 
-        else:
+        elif (self.config['model'] == 2) or (self.config['model'] == 1):
             berto = self.bert(input_ids=input_ids,
                               token_type_ids=token_type_ids,
                               attention_mask=attention_mask)
+            hidden_states = torch.stack(berto.hidden_states)
+            pooled_output = self.wk(hidden_states, attention_mask)
+            # hidden_states = berto.hidden_states
 
-            hidden_states = berto.hidden_states
+            # pooled_output = torch.cat(
+            #     tuple([hidden_states[i] for i in [-4, -3, -2, -1]]), dim=-1)
 
-            pooled_output = torch.cat(
-                tuple([hidden_states[i] for i in [-4, -3, -2, -1]]), dim=-1)
+            # pooled_output = pooled_output[:, 0, :]
 
-            pooled_output = pooled_output[:, 0, :]
+        elif (self.config['model'] == 4):
+            berto = self.bert(input_ids=input_ids,
+                              attention_mask=attention_mask)
 
-        if self.config['model'] == 2:
+            hidden_states = torch.stack(berto.hidden_states)
+            pooled_output = self.wk(hidden_states, attention_mask)
+
+            # pooled_output = torch.cat(
+            #     tuple([hidden_states[i] for i in [-4, -3, -2, -1]]), dim=-1)
+
+            # pooled_output = pooled_output[:, 0, :]
+
+        if (self.config['model'] == 2) or (self.config['model'] == 3):
             if self.config['layer_norm']:
                 pooled_output = self.layer_norm(pooled_output)
             pooled_output = self.dropout(pooled_output)
@@ -58,7 +80,7 @@ class SentimentClassifier(nn.Module):
             pooled_output = torch.nn.Tanh()(pooled_output)
             pooled_output = self.dropout2(pooled_output)
 
-        elif (self.config['model'] == 1) or (self.config['model'] == 3):
+        elif (self.config['model'] == 1):  # or (self.config['model'] == 4):
             pooled_output = self.dropout(pooled_output)
 
         if self.config['losses'] == 1:

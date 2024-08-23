@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify
 from model import BertClassifier, BertClassifierVer3
+from flask_cors import CORS
 from transformers import AutoTokenizer
 import torch
 from preprocess import preprocess_fn
 app = Flask(__name__)
+CORS(app)
 
 
 @app.before_request
@@ -20,7 +22,7 @@ def load_model():
         'name_model': 'uitnlp/visobert',
         'num_classes': 5,
         'drop_rate': 0.5,
-        'device': 'cpu'
+        'device': 'cuda'
     }
     model = BertClassifierVer3(config).to(config['device'])
     model.load_state_dict(torch.load(

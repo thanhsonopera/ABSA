@@ -1,0 +1,28 @@
+name_model: "namdp-ptit/ViRanker" # uitnlp/visobert , vinai/phobert-base
+max_length: 256
+
+num_classes: 5
+batch_size: 16
+epochs: 25 # 20
+
+device: "cuda"
+seed: 32
+isKaggle: False
+key: ["AMBIENCE", "QUALITY", "PRICES", "LOCATION", "SERVICE"]
+
+losses: 2 # 1: BCE, 2: CrossEntropy
+model: 4
+drop_rate: [0.35]
+
+optimizer: "Adam" # model 1: "Adam" # model 2: "AdamW"
+lr: 0.00001 # model 1: 1e-4 # model 2: 1e-5
+
+clip_grad_norm: False # model 2
+scheduler: True
+weights: []
+
+T_max: 1356 # 1356 # model 1,2
+eta_min: 0.00002 # model 1, 2
+weight_decay: 0 # model 2
+
+layer_norm: False

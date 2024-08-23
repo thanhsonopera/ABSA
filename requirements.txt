@@ -1,7 +1,9 @@
 transformers==4.43.3
 Flask == 3.0.3
+Flask-Cors == 4.0.1
 underthesea == 6.8.4
 emoji == 2.12.1
 sentencepiece == 0.2.0
 accelerate == 0.33.0
 protobuf == 4.25.3
+nltk == 3.8.1

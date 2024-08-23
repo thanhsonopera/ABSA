@@ -27,8 +27,8 @@ def set_seed(seed):
 
 
 class Instructor:
-    def __init__(self):
-        with open('configModel/model.yaml', 'r') as file:
+    def __init__(self, modelId):
+        with open('configModel/model_{}.yaml'.format(modelId), 'r') as file:
             config = yaml.safe_load(file)
         self.config = config
         set_seed(config['seed'])
@@ -47,14 +47,23 @@ class Instructor:
 
         train_loader, len_train_data = self.data.getBatchDataTrain()
 
+        param_optimizer = list(self.model.named_parameters())
+        no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+        optimizer_parameters = [
+            {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)],
+             'weight_decay': self.config['weight_decay']},
+            {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)],
+             'weight_decay': 0.0}
+        ]
+
         if self.config['optimizer'] == 'Adam':
             self.optimizer = torch.optim.Adam(
-                self.model.parameters(), lr=self.config['lr'])
+                optimizer_parameters, lr=self.config['lr'])
         else:
-            # self.optimizer = AdamW(
-            #     self.model.parameters(), lr=self.config['lr'], correct_bias=False)
-            self.optimizer = Lion(
-                self.model.parameters(), lr=self.config['lr'])
+            self.optimizer = AdamW(
+                optimizer_parameters, lr=self.config['lr'], correct_bias=False)
+            # self.optimizer = Lion(
+            #     self.model.parameters(), lr=self.config['lr'])
 
         if (self.config['losses'] == 1):
             self.losses = [torch.nn.BCELoss()
@@ -64,6 +73,7 @@ class Instructor:
                            for _ in range(self.config['num_classes'])]
         num_training_steps = int(len_train_data / self.config['batch_size'] *
                                  self.config['epochs'])
+
         if self.config['model'] == 3:
             self.scheduler = get_linear_schedule_with_warmup(self.optimizer, num_warmup_steps=100,
                                                              num_training_steps=num_training_steps)
@@ -73,6 +83,8 @@ class Instructor:
                 T_max=self.config['T_max'],  # ~ 2896 / 16 * 25 * 30%
                 eta_min=self.config['eta_min']
             )
+            # self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            #     self.optimizer, mode='min', factor=0.01, patience=1, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08, verbose=False)
 
         for epoch in range(self.config['epochs']):
             self.model.train()
@@ -85,7 +97,7 @@ class Instructor:
                 y_train = data['labels'].to(
                     device=self.config['device'], dtype=torch.float)
 
-                if self.config['model'] == 3:
+                if (self.config['model'] == 3) or (self.config['model'] == 4):
                     X_train = {
                         'input_ids': data['input_ids'].to(self.config['device']),
                         'token_type_ids': torch.tensor([]).to(self.config['device']),
@@ -179,7 +191,7 @@ class Instructor:
             for data in tqdm.tqdm(val_loader):
                 y_val = data['labels'].to(
                     device=self.config['device'], dtype=torch.float)
-                if self.config['model'] == 3:
+                if (self.config['model'] == 3) or (self.config['model'] == 4):
                     X_val = {
                         'input_ids': data['input_ids'].to(self.config['device']),
                         'token_type_ids': torch.tensor([]).to(self.config['device']),
@@ -231,6 +243,9 @@ class Instructor:
                 if not self.config['isKaggle']:
                     self.writer.add_scalar(
                         f'validation_loss_class_{i}', totol_loss[i], epoch)
+
+            # if self.config['scheduler']:
+            #     self.scheduler.step(sum(totol_loss))
 
             all_prediction = np.array([all_prediction[i].detach().cpu().numpy()
                                        for i in range(self.config['num_classes'])])
