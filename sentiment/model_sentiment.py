@@ -1,4 +1,4 @@
-from sentiment.WKPooling import WKPooling
+from WKPooling import WKPooling
 import torch
 import torch.nn as nn
 from transformers import AutoModel

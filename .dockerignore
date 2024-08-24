@@ -1,4 +1,5 @@
 sentiment/
+*.pth
 !sentiment/checkpoint/good/2/model.pth
 !sentiment/model_sentiment.py
 !sentiment/evaluate.py

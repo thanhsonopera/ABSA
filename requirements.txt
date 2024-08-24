@@ -7,3 +7,6 @@ sentencepiece == 0.2.0
 accelerate == 0.33.0
 protobuf == 4.25.3
 nltk == 3.8.1
+pandas == 2.2.2
+vncorenlp == 1.0.3
+fastBPE == 0.1.1
