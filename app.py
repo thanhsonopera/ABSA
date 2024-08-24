@@ -52,7 +52,7 @@ def load_model():
     model_for_sentiment = SentimentClassifier(config_for_sentiment).to(
         config_for_sentiment['device'])
     model_for_sentiment.load_state_dict(torch.load(
-        'sentiment/checkpoint/good/2/model.pth', weights_only=False, map_location=torch.device(config_for_sentiment['device'])))
+        'sentiment/checkpoint/good/9/model.pth', weights_only=False, map_location=torch.device(config_for_sentiment['device'])))
     tokenizer_for_sentiment = AutoTokenizer.from_pretrained(
         config_for_sentiment['name_model'])
     model_for_sentiment.eval()

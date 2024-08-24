@@ -1,6 +1,6 @@
 sentiment/
 *.pth
-!sentiment/checkpoint/good/2/model.pth
+!sentiment/checkpoint/good/9/model.pth
 !sentiment/model_sentiment.py
 !sentiment/evaluate.py
 !sentiment/WKPooling.py
