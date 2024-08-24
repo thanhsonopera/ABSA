@@ -27,7 +27,7 @@ def load_model():
         'name_model': 'uitnlp/visobert',
         'num_classes': 5,
         'drop_rate': 0.5,
-        'device': 'cuda'
+        'device': 'cpu'
     }
     model_for_aspects = BertClassifierVer3(
         config_for_aspects).to(config_for_aspects['device'])
@@ -44,7 +44,7 @@ def load_model():
         'name_model': 'vinai/phobert-base',
         'num_classes': 5,
         'drop_rate': [0.2, 0.3],
-        'device': 'cuda',
+        'device': 'cpu',
         'losses': 1,
         'model': 1,
         'layer_norm': False
