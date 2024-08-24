@@ -32,6 +32,11 @@ COPY . .
 
 COPY checkpoint/cp6/model.pth checkpoint/cp6/model.pth
 
+COPY sentiment/checkpoint/good/2/model.pth /app/sentiment/checkpoint/good/2/model.pth
+COPY sentiment/model_sentiment.py /app/sentiment/model_sentiment.py
+COPY sentiment/evaluate.py /app/sentiment/evaluate.py
+COPY sentiment/WKPooling.py /app/sentiment/WKPooling.py
+
 EXPOSE 5000
 
 CMD ["python3.11", "app.py"]

@@ -1,7 +1,6 @@
 import torch.nn as nn
 import numpy as np
 import torch
-from torch import Tensor
 
 
 class WKPooling(nn.Module):

@@ -19,8 +19,7 @@ def merge2Setiment(row, category, newCategory, domain='restaurant'):
             for k in newCategory:
                 if k in col:
                     if (value[i] > 0):
-                        dt.loc[0, k] = min(
-                            dt.loc[0, k], value[i]) if dt.loc[0, k] != 0 else value[i]
+                        dt.loc[0, k] = value[i] if dt.loc[0, k] != 2 else 2
 
     elif (domain == 'hotel'):
         for i, col in enumerate(oldCategory):
@@ -32,8 +31,7 @@ def merge2Setiment(row, category, newCategory, domain='restaurant'):
                     kp = 'FACILITIES'
                 if (k in col) or (kp in col):
                     if (value[i] > 0):
-                        dt.loc[0, k] = min(
-                            dt.loc[0, k], value[i]) if dt.loc[0, k] != 0 else value[i]
+                        dt.loc[0, k] = value[i] if dt.loc[0, k] != 2 else 2
 
     return dt.iloc[0]
 

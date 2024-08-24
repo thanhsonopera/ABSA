@@ -1,8 +1,8 @@
+from sentiment.WKPooling import WKPooling
 import torch
 import torch.nn as nn
 from transformers import AutoModel
 from torch import Tensor
-from WKPooling import WKPooling
 
 
 class SentimentClassifier(nn.Module):
@@ -18,7 +18,7 @@ class SentimentClassifier(nn.Module):
         elif (config['model'] == 2) or (config['model'] == 1):
             self.bert = AutoModel.from_pretrained(
                 config['name_model'], output_hidden_states=True)
-            input_size_1 = 768
+            input_size_1 = 3072
 
         elif (config['model'] == 4):
             self.bert = AutoModel.from_pretrained(
@@ -50,14 +50,12 @@ class SentimentClassifier(nn.Module):
             berto = self.bert(input_ids=input_ids,
                               token_type_ids=token_type_ids,
                               attention_mask=attention_mask)
-            hidden_states = torch.stack(berto.hidden_states)
-            pooled_output = self.wk(hidden_states, attention_mask)
-            # hidden_states = berto.hidden_states
+            hidden_states = berto.hidden_states
 
-            # pooled_output = torch.cat(
-            #     tuple([hidden_states[i] for i in [-4, -3, -2, -1]]), dim=-1)
+            pooled_output = torch.cat(
+                tuple([hidden_states[i] for i in [-4, -3, -2, -1]]), dim=-1)
 
-            # pooled_output = pooled_output[:, 0, :]
+            pooled_output = pooled_output[:, 0, :]
 
         elif (self.config['model'] == 4):
             berto = self.bert(input_ids=input_ids,
