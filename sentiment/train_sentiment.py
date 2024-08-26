@@ -46,9 +46,9 @@ class Instructor:
 
     def train(self):
         if not self.config['isKaggle']:
-            if not os.path.exists('result/logs'):
+            if not os.path.exists(self.root + 'result/logs'):
                 os.makedirs('result/logs')
-            self.writer = SummaryWriter('result/logs')
+            self.writer = SummaryWriter(self.root + 'result/logs')
 
         train_loader, len_train_data = self.data.getBatchDataTrain()
 

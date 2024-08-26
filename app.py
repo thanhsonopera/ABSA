@@ -1,3 +1,7 @@
+from fairseq.data import Dictionary
+from fairseq.data.encoders.fastbpe import fastBPE
+from vncorenlp import VnCoreNLP
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 from flask import Flask, request, jsonify
 from model import BertClassifierVer3
 from sentiment.model_sentiment import SentimentClassifier
@@ -10,8 +14,35 @@ app = Flask(__name__)
 CORS(app)
 
 
+class BPEConfig:
+    def __init__(self, bpe_codes):
+        self.bpe_codes = bpe_codes
+
+
+def convert_vncore(text, rdrsegmenter, bpe, vocab):
+    text = preprocess_fn(text, preprocess=False)
+    text = rdrsegmenter.tokenize(text)
+    text = ' '.join([' '.join(x) for x in text])
+    subwords = '<s> ' + bpe.encode(text) + ' </s>'
+    encoded_sent = vocab.encode_line(
+        subwords, append_eos=True, add_if_not_exist=False).long().tolist()
+    return encoded_sent
+
+
 @app.before_request
 def load_model():
+    rdrsegmenter = VnCoreNLP("vncorenlp/VnCoreNLP-1.1.1.jar",
+                             annotators="wseg", max_heap_size='-Xmx500m')
+    cfg = BPEConfig(bpe_codes='sentiment/bpe.codes')
+    bpe = fastBPE(cfg)
+
+    vocab = Dictionary()
+    vocab.add_from_file('sentiment/vocab.txt')
+    text = 'Hello world'
+    a_t = convert_vncore(text, rdrsegmenter, bpe, vocab)
+    a_t = pad_sequences([a_t], maxlen=256, dtype="long",
+                        value=0, truncating="post", padding="post")
+    print(a_t)
     global model_for_aspects, tokenizer_for_aspects, config_for_aspects, key, config_for_sentiment, model_for_sentiment, tokenizer_for_sentiment
 
     key = ['AMBIENCE', 'QUALITY', 'PRICES', 'LOCATION', 'SERVICE']

@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 from transformers import AutoModel
 from torch import Tensor
+import torch.nn.init as init
 
 
 class SentimentClassifier(nn.Module):
@@ -32,10 +33,17 @@ class SentimentClassifier(nn.Module):
         if (config['model'] == 2) or (self.config['model'] == 3):
             self.layer_norm = nn.LayerNorm(input_size_1).to(config['device'])
             self.fc = nn.Linear(input_size_1, 256).to(config['device'])
+            # init.kaiming_uniform_(self.fc.weight, nonlinearity='tanh')
+            # init.zeros_(self.fc.bias)
+
             self.layer_norm2 = nn.LayerNorm(256).to(config['device'])
             self.dropout2 = nn.Dropout(config['drop_rate'][1])
             self.fcs = [nn.Linear(256, 4).to(config['device'])
                         for _ in range(config['num_classes'])]
+            # for i in range(config['num_classes']):
+            #     init.kaiming_uniform_(
+            #         self.fcs[i].weight, nonlinearity='tanh')
+            #     init.zeros_(self.fcs[i].bias)
 
         elif (config['model'] == 1) or (config['model'] == 4):
             self.fcs = [nn.Linear(input_size_1, 4).to(config['device'])
@@ -72,6 +80,7 @@ class SentimentClassifier(nn.Module):
         if (self.config['model'] == 2) or (self.config['model'] == 3):
             if self.config['layer_norm']:
                 pooled_output = self.layer_norm(pooled_output)
+
             pooled_output = self.dropout(pooled_output)
             pooled_output = self.fc(pooled_output)
             pooled_output = self.layer_norm2(pooled_output)

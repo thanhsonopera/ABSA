@@ -11,9 +11,10 @@ from dataset_vncorenlp import Data
 
 from tqdm import tqdm
 
-# class BPEConfig:
-#     def __init__(self, bpe_codes):
-#         self.bpe_codes = bpe_codes
+
+class BPEConfig:
+    def __init__(self, bpe_codes):
+        self.bpe_codes = bpe_codes
 
 
 # rdrsegmenter = VnCoreNLP("vncorenlp/VnCoreNLP-1.1.1.jar",
