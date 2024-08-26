@@ -6,7 +6,6 @@ import string
 import emoji
 
 # from vncorenlp import VnCoreNLP
-import underthesea
 # from nltk import flatten
 
 
@@ -206,7 +205,8 @@ def remove_unnecessary_characters(text):
     return text
 
 
-def preprocess_fn(text, word_tokenize=None):
+def preprocess_fn(text, word_tokenize=None, preprocess=True):
+
     text = text.strip()
     # tokens = sent.split()
     # for token in tokens:
@@ -218,13 +218,15 @@ def preprocess_fn(text, word_tokenize=None):
     text = convert_unicode(text)
     text = standardize_sentence_typing(text)
     text = normalize_acronyms(text)
+    if preprocess:
+        import underthesea
 
-    tokens = text.split()
-    if word_tokenize is None:
-        text = underthesea.word_tokenize(" ".join(tokens), format="text")
-    else:
-        # for using VnCoreNLP
-        text = " ".join(word_tokenize.tokenize(" ".join(tokens))[0])
+        tokens = text.split()
+        if word_tokenize is None:
+            text = underthesea.word_tokenize(" ".join(tokens), format="text")
+        else:
+            # for using VnCoreNLP
+            text = " ".join(word_tokenize.tokenize(" ".join(tokens))[0])
 
     text = remove_unnecessary_characters(text)
     # return text.lower()

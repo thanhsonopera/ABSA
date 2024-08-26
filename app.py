@@ -45,9 +45,9 @@ def load_model():
         'num_classes': 5,
         'drop_rate': [0.2, 0.3],
         'device': 'cpu',
-        'losses': 1,
-        'model': 1,
-        'layer_norm': False
+        'losses': 2,
+        'model': 2,
+        'layer_norm': True
     }
     model_for_sentiment = SentimentClassifier(config_for_sentiment).to(
         config_for_sentiment['device'])
@@ -137,6 +137,7 @@ def predict_sentiment():
                 if predict[i][j].item() != 0:
                     result.append(
                         {key[i]: PolarityMapping.INDEX_TO_POLARITY[predict[i][j].item()]})
+
         return jsonify({'result': result}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 400

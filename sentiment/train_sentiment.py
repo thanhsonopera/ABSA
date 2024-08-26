@@ -1,5 +1,6 @@
 
 from dataset_sentiment import Data
+from dataset_vncorenlp import DataVNCoreNLP
 from transformers import AutoTokenizer, AdamW, get_linear_schedule_with_warmup
 import tqdm
 from model_sentiment import SentimentClassifier
@@ -11,8 +12,8 @@ import json
 import random
 import os
 from torch.utils.tensorboard import SummaryWriter
-from lion_pytorch import Lion
-from schedule import WarmupCosineDecay
+# from lion_pytorch import Lion
+# from schedule import WarmupCosineDecay
 
 
 def set_seed(seed):
@@ -27,15 +28,19 @@ def set_seed(seed):
 
 
 class Instructor:
-    def __init__(self, modelId):
-        with open('configModel/model_{}.yaml'.format(modelId), 'r') as file:
+    def __init__(self, modelId, root=''):
+        with open(root + 'configModel/model_{}.yaml'.format(modelId), 'r') as file:
             config = yaml.safe_load(file)
+        self.root = root
         self.config = config
         set_seed(config['seed'])
         tokenizer = AutoTokenizer.from_pretrained(self.config['name_model'])
-
-        self.data = Data(tokenizer=tokenizer,
-                         batch_size=self.config['batch_size'], max_length=self.config['max_length'])
+        if self.config['isVnCore']:
+            self.data = DataVNCoreNLP(
+                batch_size=self.config['batch_size'], max_length=self.config['max_length'])
+        else:
+            self.data = Data(tokenizer=tokenizer,
+                             batch_size=self.config['batch_size'], max_length=self.config['max_length'])
 
         self.model = SentimentClassifier(config).to(self.config['device'])
 
@@ -97,7 +102,7 @@ class Instructor:
                 y_train = data['labels'].to(
                     device=self.config['device'], dtype=torch.float)
 
-                if (self.config['model'] == 3) or (self.config['model'] == 4):
+                if (self.config['model'] == 3) or (self.config['model'] == 4) or (self.config['isVnCore']):
                     X_train = {
                         'input_ids': data['input_ids'].to(self.config['device']),
                         'token_type_ids': torch.tensor([]).to(self.config['device']),
@@ -172,7 +177,7 @@ class Instructor:
 
             if not self.config['isKaggle']:
                 Evaluator(all_target, all_prediction,
-                          self.config['key'], type='train', num=epoch)
+                          self.config['key'], type='train', num=epoch, root=self.root)
             self.validate(epoch)
 
         if not self.config['isKaggle']:
@@ -191,7 +196,7 @@ class Instructor:
             for data in tqdm.tqdm(val_loader):
                 y_val = data['labels'].to(
                     device=self.config['device'], dtype=torch.float)
-                if (self.config['model'] == 3) or (self.config['model'] == 4):
+                if (self.config['model'] == 3) or (self.config['model'] == 4) or (self.config['isVnCore']):
                     X_val = {
                         'input_ids': data['input_ids'].to(self.config['device']),
                         'token_type_ids': torch.tensor([]).to(self.config['device']),
@@ -257,7 +262,6 @@ class Instructor:
             for param_group in self.optimizer.param_groups:
                 print('Learning rate', param_group['lr'])
                 print('Beta', param_group['betas'])
-                # print('Eps', param_group['eps'])
                 print('Weight decay', param_group['weight_decay'])
 
             # if ((sum(totol_loss) < sum(best_loss)) and (not self.config['isKaggle'])):
@@ -265,14 +269,14 @@ class Instructor:
             #     self.save_checkpoint(best_loss)
             #     save_pred = True
             if not self.config['isKaggle']:
-                path = 'checkpoint' + '/' + \
+                path = self.root + 'checkpoint' + '/' + \
                     str(self.config['model']) + '_' + str(epoch)
 
                 self.save_checkpoint(totol_loss, path)
                 save_pred = True
 
                 aspect_cate_polar_report = Evaluator(all_target, all_prediction,
-                                                     self.config['key'], type='val', num=epoch).aspect_cate_polar_report
+                                                     self.config['key'], type='val', num=epoch, root=self.root).aspect_cate_polar_report
                 if save_pred:
                     with open(path + '/aspect_cate_polar_report.json', 'w') as f:
                         json.dump(aspect_cate_polar_report, f)

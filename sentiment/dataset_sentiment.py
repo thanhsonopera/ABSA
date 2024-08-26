@@ -66,7 +66,8 @@ class Data:
         self.key = cfs['key']
 
     def getBatchDataTrain(self):
-        X_train = self.dataTrain['Review'].apply(preprocess_fn)
+        X_train = self.dataTrain['Review'].apply(
+            lambda review: preprocess_fn(review, preprocess=True))
         y_train = self.dataTrain[self.key[1:]]
         train_dataset = TextDataset(
             texts=X_train.values,
@@ -78,7 +79,8 @@ class Data:
         return DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True), len(train_dataset)
 
     def getBatchDataVal(self):
-        X_val = self.dataVal['Review'].apply(preprocess_fn)
+        X_val = self.dataVal['Review'].apply(
+            lambda review: preprocess_fn(review, preprocess=True))
         y_val = self.dataVal[self.key[1:]]
         val_dataset = TextDataset(
             texts=X_val.values,
@@ -90,7 +92,8 @@ class Data:
         return DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True), len(val_dataset)
 
     def getBatchDataTest(self):
-        X_test = self.dataTest['Review'].apply(preprocess_fn)
+        X_test = self.dataTest['Review'].apply(
+            lambda review: preprocess_fn(review, preprocess=True))
         y_test = self.dataTest[self.key[1:]]
         test_dataset = TextDataset(
             texts=X_test.values,
@@ -101,7 +104,7 @@ class Data:
         return DataLoader(test_dataset, batch_size=self.batch_size, shuffle=True), len(test_dataset)
 
     def getStrData(self, str):
-        str = preprocess_fn(str)
+        str = preprocess_fn(str, preprocess=True)
         str_dataset = TextDataset(
             texts=[str],
             labels=[0],

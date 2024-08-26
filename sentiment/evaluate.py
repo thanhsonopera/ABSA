@@ -13,7 +13,7 @@ class PolarityMapping:
 
 
 class Evaluator:
-    def __init__(self, y_test, y_pred, aspect_category_names, num=0, type='val'):
+    def __init__(self, y_test, y_pred, aspect_category_names, num=0, type='val', root=''):
         aspect_cate_test, aspect_cate_pred = [], []
         aspect_cate_polar_test, aspect_cate_polar_pred = [], []
 
@@ -57,7 +57,7 @@ class Evaluator:
 
         # print(len(aspect_cate_polar_test), len(aspect_cate_polar_pred)) => len * num_classes
 
-        path_as_polarity = 'result/{}/aspect_cate_polar_report_{}.json'.format(
+        path_as_polarity = root + 'result/{}/aspect_cate_polar_report_{}.json'.format(
             type, num)
 
         if not os.path.exists(path_as_polarity):

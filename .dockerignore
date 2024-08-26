@@ -1,6 +1,9 @@
 sentiment/
 *.pth
+fastBPE/
 !sentiment/checkpoint/good/9/model.pth
 !sentiment/model_sentiment.py
 !sentiment/evaluate.py
 !sentiment/WKPooling.py
+!sentiment/vocab.txt
+!sentiment/bpe.codes

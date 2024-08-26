@@ -1,4 +1,4 @@
-from WKPooling import WKPooling
+from .WKPooling import WKPooling
 import torch
 import torch.nn as nn
 from transformers import AutoModel
@@ -48,7 +48,7 @@ class SentimentClassifier(nn.Module):
 
         elif (self.config['model'] == 2) or (self.config['model'] == 1):
             berto = self.bert(input_ids=input_ids,
-                              token_type_ids=token_type_ids,
+                              #   token_type_ids=token_type_ids,
                               attention_mask=attention_mask)
             hidden_states = berto.hidden_states
 
