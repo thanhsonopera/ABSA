@@ -1,4 +1,4 @@
-from WKPooling import WKPooling
+from .WKPooling import WKPooling
 import torch
 import torch.nn as nn
 from transformers import AutoModel
@@ -32,9 +32,11 @@ class SentimentClassifier(nn.Module):
 
         if (config['model'] == 2) or (self.config['model'] == 3):
             self.layer_norm = nn.LayerNorm(input_size_1).to(config['device'])
+
             self.fc = nn.Linear(input_size_1, 256).to(config['device'])
             gain_tanh = nn.init.calculate_gain('tanh')
             gain_sigmoid = nn.init.calculate_gain('sigmoid')
+
             init.xavier_uniform_(
                 self.fc.weight, gain=gain_tanh)
             init.zeros_(self.fc.bias)

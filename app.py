@@ -10,6 +10,8 @@ from flask_cors import CORS
 from transformers import AutoTokenizer
 import torch
 from preprocess import preprocess_fn
+import pandas as pd
+import numpy as np
 app = Flask(__name__)
 CORS(app)
 
@@ -29,6 +31,104 @@ def convert_vncore(text, rdrsegmenter, bpe, vocab):
     return encoded_sent
 
 
+def exportCsv(data):
+    number_comment = 0
+    columns = ['user_name', 'user_timec', 'user_rating',
+               'user_titlec', 'user_comment', 'nameUserLikeText', 'numberCmtOfPost']
+    comment_csv = []
+    comment_csv.append(columns)
+
+    for comment_user in data:
+        row = []
+        for i, key in enumerate(comment_user.keys()):
+            if (i <= 1) or (i >= 7 and i <= 11):
+                continue
+
+            if key == 'user_CmtOfCmt':
+                for c_key in comment_user[key].keys():
+                    if c_key == 'allCmtInPost':
+                        continue
+                    if comment_user[key][c_key] == '':
+                        row.append(np.nan)
+                    else:
+                        row.append(comment_user[key][c_key])
+            else:
+                row.append(comment_user[key])
+        if i < 8:
+            row.append(np.nan)
+            row.append(0)
+        number_comment += 1
+        comment_csv.append(row)
+
+    if len(comment_csv) > 1:
+        df = pd.DataFrame(data=comment_csv[1:], columns=comment_csv[0])
+        df['user_timec'] = pd.to_datetime(df['user_timec'])
+
+        # df_sort_date = df.sort_values(by='user_timec')
+        max_rating = df[df['user_rating'] == 10.0]
+
+        df_sort_name = max_rating.sort_values(by=['user_name', 'user_timec'])
+
+        # Tìm các tên trùng nhau có ngày cách nhau dưới 2
+        duplicate_names = df_sort_name[df_sort_name.duplicated(
+            subset=['user_name'], keep=False)]
+
+        # Tính khoảng cách giữa các lần xuất hiện của cùng một tên
+        duplicate_names['time_diff'] = duplicate_names.groupby(
+            'user_name')['user_timec'].diff().dt.days.abs()
+
+        # Lọc ra các bản ghi có ngày cách nhau dưới 2
+        filter_seeder = duplicate_names[duplicate_names['time_diff'] < 2]
+
+        filter_seeder = filter_seeder.drop(columns=['time_diff'])
+
+        df_remove_seeder = df[~df['user_name'].isin(
+            filter_seeder['user_name'])]
+
+        number_comment_seeder = df.shape[0] - df_remove_seeder.shape[0]
+        # print(df_remove_seeder, number_comment_seeder)
+
+        ####
+        max_rating = df_remove_seeder[df_remove_seeder['user_rating'] == 10.0]
+        filter_comment_min15 = max_rating[max_rating['user_comment'].str.len(
+        ) <= 15]
+        df_remove_comment_min15 = df_remove_seeder[~df_remove_seeder['user_name'].isin(
+            filter_comment_min15['user_name'])]
+
+        number_comment_min15 = df_remove_seeder.shape[0] - \
+            df_remove_comment_min15.shape[0]
+
+        # print(df_remove_comment_min15, number_comment_min15)
+
+        ####
+        max_rating = df_remove_comment_min15[df_remove_comment_min15['user_rating'] == 10.0]
+        filter_title_as_comment = max_rating[max_rating['user_titlec']
+                                             == max_rating['user_comment']]
+        df_remove_title_same_comment = df_remove_comment_min15[
+            ~df_remove_comment_min15['user_name'].isin(filter_title_as_comment['user_name'])]
+
+        number_title_same_comment = df_remove_comment_min15.shape[0] - \
+            df_remove_title_same_comment.shape[0]
+
+        # print(filter_title_as_comment, df_remove_title_same_comment,
+        #       number_title_same_comment)
+
+        total_comment_remove = number_comment_seeder + \
+            number_comment_min15 + number_title_same_comment
+
+        # print(total_comment_remove)
+
+        new_data = []
+        user_name = df_remove_title_same_comment['user_name'].unique()
+
+        for comment_user in data:
+            if comment_user['user_name'] in user_name:
+                new_data.append(comment_user)
+        return new_data, number_comment_seeder, number_comment_min15, number_title_same_comment, total_comment_remove
+
+    return [], 0, 0, 0, 0
+
+
 @app.before_request
 def load_model():
     rdrsegmenter = VnCoreNLP("vncorenlp/VnCoreNLP-1.1.1.jar",
@@ -38,11 +138,11 @@ def load_model():
 
     vocab = Dictionary()
     vocab.add_from_file('sentiment/vocab.txt')
-    text = 'Hello world'
-    a_t = convert_vncore(text, rdrsegmenter, bpe, vocab)
-    a_t = pad_sequences([a_t], maxlen=256, dtype="long",
-                        value=0, truncating="post", padding="post")
-    print(a_t)
+    # text = 'Hello world'
+    # a_t = convert_vncore(text, rdrsegmenter, bpe, vocab)
+    # a_t = pad_sequences([a_t], maxlen=256, dtype="long",
+    #                     value=0, truncating="post", padding="post")
+    # print(a_t)
     global model_for_aspects, tokenizer_for_aspects, config_for_aspects, key, config_for_sentiment, model_for_sentiment, tokenizer_for_sentiment
 
     key = ['AMBIENCE', 'QUALITY', 'PRICES', 'LOCATION', 'SERVICE']
@@ -170,6 +270,21 @@ def predict_sentiment():
                         {key[i]: PolarityMapping.INDEX_TO_POLARITY[predict[i][j].item()]})
 
         return jsonify({'result': result}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+
+@app.route('/normalize', methods=['POST'])
+def normalize():
+    try:
+        data = request.get_json()
+        new_data, number_comment_seeder, number_comment_min15, number_title_same_comment, total_comment_remove = exportCsv(
+            data)
+        return jsonify({'newdata': new_data,
+                        'number_comment_seeder': number_comment_seeder,
+                        'number_comment_min15': number_comment_min15,
+                        'number_title_same_comment': number_title_same_comment,
+                        'total_comment_remove': total_comment_remove}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
