@@ -25,5 +25,5 @@ T_max: 1356 # 1356 # model 1,2
 eta_min: 0.00003 # model 1, 2
 weight_decay: 0 # model 2
 
-layer_norm: False
+layer_norm: True
 isVnCore: True

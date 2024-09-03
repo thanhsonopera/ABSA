@@ -27,5 +27,3 @@ weight_decay: 0 # model 2
 
 layer_norm: False
 isVnCore: True
-
-init: xavier_uniform_ , tanh
